@@ -99,12 +99,12 @@ export const metadata = {
     title: "Sparta – Sports Performance & Athlete Analytics",
     description:
       "Sports performance analytics platform for athletes, coaches, and trainers. Track jumps, speed, strength, load, and performance metrics easily.",
-    images: ["https://sparta-sports.com/og-image.png"],
+    images: ["https://sportsv2-two.vercel.app/sparta.png"],
     creator: "@sparta",
   },
 
   alternates: {
-    canonical: "https://sparta-sports.com",
+    canonical: "https://sportsv2-two.vercel.app/sparta.png",
   },
 
   icons: {
@@ -114,8 +114,7 @@ export const metadata = {
   },
 
   verification: {
-    google:
-      "google-site-verification=u8z5QIKb2U2ME0HuY9R6oVs8uTuIYk-8brYY3FNpQAU",
+    google: "u8z5QIKb2U2ME0HuY9R6oVs8uTuIYk-8brYY3FNpQAU",
   },
 };
 
