@@ -74,19 +74,19 @@ export const metadata = {
   creator: "Sparta",
   publisher: "Sparta",
 
-  metadataBase: new URL("https://sparta-sports.com"), // change to your real domain
+  metadataBase: new URL("https://sportsv2-two.vercel.app"), // change to your real domain
 
   openGraph: {
     title: "Sparta – Sports Performance & Athlete Analytics",
     description:
       "Analyze athletic performance, track strength and conditioning metrics, and improve training results with Sparta's advanced sports analytics tools.",
-    url: "https://sparta-sports.com",
+    url: "https://sportsv2-two.vercel.app",
     siteName: "Sparta",
     locale: "en_US",
     type: "website",
     images: [
       {
-        url: "https://sparta-sports.com/og-image.png",
+        url: "https://sportsv2-two.vercel.app/sparta.png",
         width: 1200,
         height: 630,
         alt: "Sparta – Sports Performance Analytics",
@@ -114,8 +114,8 @@ export const metadata = {
   },
 
   verification: {
-    google: "YOUR_GOOGLE_SEARCH_CONSOLE_CODE",
-    bing: "YOUR_BING_VERIFICATION_CODE",
+    google:
+      "google-site-verification=u8z5QIKb2U2ME0HuY9R6oVs8uTuIYk-8brYY3FNpQAU",
   },
 };
 
