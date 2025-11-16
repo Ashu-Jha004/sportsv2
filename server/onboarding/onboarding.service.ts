@@ -2,6 +2,7 @@
 import type { OnboardingRequestDTO } from "@/lib/validations/onboarding/onboarding.dto";
 import { OnboardingRepository } from "./onboarding.repository";
 import { ClerkOnboardingGateway } from "./clerk.gateway";
+import prisma from "@/lib/prisma";
 
 export type CompleteOnboardingResult = {
   success: boolean;
@@ -13,8 +14,8 @@ export class OnboardingService {
   private readonly clerkGateway: ClerkOnboardingGateway;
 
   constructor(
-    repo = new OnboardingRepository(),
-    clerkGateway = new ClerkOnboardingGateway(),
+    repo = new OnboardingRepository(prisma),
+    clerkGateway = new ClerkOnboardingGateway()
   ) {
     this.repo = repo;
     this.clerkGateway = clerkGateway;
@@ -22,7 +23,7 @@ export class OnboardingService {
 
   async completeOnboarding(
     userId: string,
-    payload: OnboardingRequestDTO,
+    payload: OnboardingRequestDTO
   ): Promise<CompleteOnboardingResult> {
     try {
       // 1. Persist to your own DB
