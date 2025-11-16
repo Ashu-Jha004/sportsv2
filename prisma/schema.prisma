@@ -1,31 +1,67 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
-generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
-}
+// schema.prisma
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+generator client {
+  provider = "prisma-client-js"
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  authorId  Int
-  author    User    @relation(fields: [authorId], references: [id])
+// --- Enums ---
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+enum Sport {
+  FOOTBALL
+  BASKETBALL
+  CRICKET
+  TENNIS
+  RUNNING
+  SWIMMING
+  OTHER
+}
+
+// --- Models ---
+
+model Athlete {
+  id        String   @id @default(cuid())
+  // Clerk user id for 1-1 mapping
+  clerkUserId String  @unique
+
+  // Step 1: profile
+  username    String   @unique
+  email       String   @unique
+  firstName   String
+  lastName    String
+  profileImage String? // URL to avatar
+  dateOfBirth DateTime
+  gender      Gender
+  bio         String?  @db.Text
+
+  // Step 2: sports
+  primarySport   Sport
+  secondarySport Sport?
+
+  // Step 3: location
+  country   String
+  state     String
+  city      String
+  latitude  Float
+  longitude Float
+
+  // Onboarding & timestamps
+  onboardingComplete Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([clerkUserId])
+  @@index([country, state, city])
+  @@index([latitude, longitude])
 }
