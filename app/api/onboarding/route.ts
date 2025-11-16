@@ -13,21 +13,28 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
+    console.log("[/api/onboarding] auth userId:", userId);
 
     // 2. Parse and validate body
     const body = await request.json();
+    console.log("[/api/onboarding] body parsed");
+    console.log("DATABASE_URL host:", new URL(process.env.DATABASE_URL!).host);
+
     const payload = OnboardingRequestSchema.parse(body);
+    console.log("[/api/onboarding] payload validated");
 
     // 3. Delegate to service
     const result = await service.completeOnboarding(userId, payload);
+    console.log("[/api/onboarding] service result:", result);
 
     if (!result.success) {
+      console.log("[/api/onboarding] result failed");
       return NextResponse.json(
         { success: false, error: result.error },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -44,13 +51,13 @@ export async function POST(request: Request) {
           success: false,
           error: "Invalid onboarding data.",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     return NextResponse.json(
       { success: false, error: "Internal server error." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
