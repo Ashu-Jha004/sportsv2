@@ -78,5 +78,5 @@ export const useOnboardingStore = create<OnboardingState & OnboardingActions>(
         location: {},
         locationCompleted: false,
       }),
-  })
+  }),
 );

@@ -66,7 +66,7 @@ export default function StepLocation() {
       (error) => {
         console.error("Error getting user location:", error);
         setGeoLoading(false);
-      }
+      },
     );
   }, [form, geoLoading]);
 
@@ -140,7 +140,7 @@ export default function StepLocation() {
                       field.onChange(
                         e.target.value === ""
                           ? undefined
-                          : Number(e.target.value)
+                          : Number(e.target.value),
                       )
                     }
                   />
@@ -166,7 +166,7 @@ export default function StepLocation() {
                       field.onChange(
                         e.target.value === ""
                           ? undefined
-                          : Number(e.target.value)
+                          : Number(e.target.value),
                       )
                     }
                   />

@@ -5,14 +5,12 @@ import type { OnboardingRequestDTO } from "@/lib/validations/onboarding/onboardi
 export class ClerkOnboardingGateway {
   async updateOnboardingMetadata(
     userId: string,
-    payload: OnboardingRequestDTO
+    payload: OnboardingRequestDTO,
   ) {
     const { profile, sports, location } = payload;
 
     // Use updateUserMetadata to merge instead of overwrite
-    const res = await (
-      await clerkClient()
-    ).users.updateUserMetadata(userId, {
+    const res = await (await clerkClient()).users.updateUserMetadata(userId, {
       publicMetadata: {
         onboardingComplete: true,
         // Mirror selected fields for quick access via Clerk sessionClaims

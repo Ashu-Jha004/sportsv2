@@ -14,7 +14,7 @@ export class OnboardingService {
 
   constructor(
     repo = new OnboardingRepository(),
-    clerkGateway = new ClerkOnboardingGateway()
+    clerkGateway = new ClerkOnboardingGateway(),
   ) {
     this.repo = repo;
     this.clerkGateway = clerkGateway;
@@ -22,7 +22,7 @@ export class OnboardingService {
 
   async completeOnboarding(
     userId: string,
-    payload: OnboardingRequestDTO
+    payload: OnboardingRequestDTO,
   ): Promise<CompleteOnboardingResult> {
     try {
       // 1. Persist to your own DB

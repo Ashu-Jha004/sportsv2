@@ -23,7 +23,7 @@ export class OnboardingRepository {
 
   async upsertByClerkUserId(
     clerkUserId: string,
-    payload: OnboardingRequestDTO
+    payload: OnboardingRequestDTO,
   ) {
     const { profile, sports, location } = payload;
 

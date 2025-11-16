@@ -9,7 +9,7 @@ export const OnboardingProfileSchema = z.object({
     .max(32, "Username must be at most 32 characters.")
     .regex(
       /^[a-zA-Z0-9._-]+$/,
-      "Username can contain letters, numbers, ., _ and - only."
+      "Username can contain letters, numbers, ., _ and - only.",
     ),
   email: z.string().email("Please provide a valid email address."),
   firstName: z

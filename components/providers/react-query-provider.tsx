@@ -19,7 +19,7 @@ export function ReactQueryProvider({
             refetchOnWindowFocus: false,
           },
         },
-      })
+      }),
   );
 
   return (
