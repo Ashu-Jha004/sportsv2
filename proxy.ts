@@ -5,8 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 const isOnboardingRoute = createRouteMatcher(["/onboarding"]);
 const isPublicRoute = createRouteMatcher([
   "/",
-  "/auth/sign-in",
-  "/auth/sign-up",
+  "/auth/sign-in(.*)",
+  "/auth/sign-up(.*)",
 ]);
 const isApiRoute = createRouteMatcher(["/api/:path*"]);
 
