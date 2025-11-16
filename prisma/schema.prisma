@@ -1,15 +1,39 @@
-// schema.prisma
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-// --- Enums ---
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Athlete {
+  id                 String   @id @default(cuid())
+  clerkUserId        String   @unique
+  username           String   @unique
+  email              String   @unique
+  firstName          String
+  lastName           String
+  profileImage       String?
+  dateOfBirth        DateTime
+  gender             Gender
+  bio                String?
+  primarySport       Sport
+  secondarySport     Sport?
+  country            String
+  state              String
+  city               String
+  latitude           Float
+  longitude          Float
+  onboardingComplete Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([clerkUserId])
+  @@index([country, state, city])
+  @@index([latitude, longitude])
+}
 
 enum Gender {
   MALE
@@ -26,42 +50,4 @@ enum Sport {
   RUNNING
   SWIMMING
   OTHER
-}
-
-// --- Models ---
-
-model Athlete {
-  id        String   @id @default(cuid())
-  // Clerk user id for 1-1 mapping
-  clerkUserId String  @unique
-
-  // Step 1: profile
-  username    String   @unique
-  email       String   @unique
-  firstName   String
-  lastName    String
-  profileImage String? // URL to avatar
-  dateOfBirth DateTime
-  gender      Gender
-  bio         String?  @db.Text
-
-  // Step 2: sports
-  primarySport   Sport
-  secondarySport Sport?
-
-  // Step 3: location
-  country   String
-  state     String
-  city      String
-  latitude  Float
-  longitude Float
-
-  // Onboarding & timestamps
-  onboardingComplete Boolean   @default(false)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-
-  @@index([clerkUserId])
-  @@index([country, state, city])
-  @@index([latitude, longitude])
 }
