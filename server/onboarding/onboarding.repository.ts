@@ -1,17 +1,15 @@
 // src/server/onboarding/onboarding.repository.ts
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import type { OnboardingRequestDTO } from "@/lib/validations/onboarding/onboarding.dto";
-
-const prisma = new PrismaClient();
 
 export type AthleteEntity = Awaited<
   ReturnType<OnboardingRepository["findByClerkUserId"]>
 >;
 
 export class OnboardingRepository {
-  private readonly db: PrismaClient;
+  private readonly db;
 
-  constructor(dbClient?: PrismaClient) {
+  constructor(dbClient: any) {
     this.db = dbClient ?? prisma;
   }
 
