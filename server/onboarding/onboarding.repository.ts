@@ -1,5 +1,5 @@
 // src/server/onboarding/onboarding.repository.ts
-import { PrismaClient, Gender, Sport } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import type { OnboardingRequestDTO } from "@/lib/validations/onboarding/onboarding.dto";
 
 const prisma = new PrismaClient();
@@ -39,9 +39,9 @@ export class OnboardingRepository {
         lastName: profile.lastName,
         profileImage: profile.profileImage ?? undefined,
         dateOfBirth,
-        gender: profile.gender as Gender,
+        gender: profile.gender,
         bio: profile.bio ?? undefined,
-        primarySport: sports.primarySport as Sport,
+        primarySport: sports.primarySport,
         secondarySport: sports.secondarySport ?? undefined,
         country: location.country,
         state: location.state,
@@ -57,9 +57,9 @@ export class OnboardingRepository {
         lastName: profile.lastName,
         profileImage: profile.profileImage ?? undefined,
         dateOfBirth,
-        gender: profile.gender as Gender,
+        gender: profile.gender,
         bio: profile.bio ?? undefined,
-        primarySport: sports.primarySport as Sport,
+        primarySport: sports.primarySport,
         secondarySport: sports.secondarySport ?? undefined,
         country: location.country,
         state: location.state,
