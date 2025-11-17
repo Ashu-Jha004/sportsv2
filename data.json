@@ -1,0 +1,4 @@
+{
+    "Task":"Buildig a dynamic profile page that renders users inforamation and data.",
+    "prompt":"your task is to build a dynamic profile page for my social media application, this page will be split in components, each components will spilt into sub component."
+}

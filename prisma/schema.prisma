@@ -21,6 +21,10 @@ model Athlete {
   bio                String?
   primarySport       Sport
   secondarySport     Sport?
+  rank               Rank @default(PAWN)
+  class              Class @default(E)
+  roles              String[]
+  isAdmin            Boolean @default(false)
   country            String
   state              String
   city               String
@@ -33,6 +37,22 @@ model Athlete {
   @@index([clerkUserId])
   @@index([country, state, city])
   @@index([latitude, longitude])
+}
+enum Rank {
+  KING
+  PAWN
+  ROOK
+  KNIGHT
+  BISHOP
+  QUEEN
+}
+
+enum Class {
+  A
+  B
+  C
+  D
+  E
 }
 
 enum Gender {
