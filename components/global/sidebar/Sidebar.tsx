@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { SignedIn, UserButton, useUser } from "@clerk/nextjs";
 import {
   Menu,
   User,
@@ -28,7 +29,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 // -------------------------------- Sidebar Header --------------------------------
-const SidebarHeader = ({ brandName, userName, collapsed, toggle }: any) => {
+const SidebarHeader = ({ brandName, user, collapsed, toggle }: any) => {
   return (
     <div className="flex items-center gap-3 px-3 py-4 relative">
       {/* Burger Icon */}
@@ -48,7 +49,7 @@ const SidebarHeader = ({ brandName, userName, collapsed, toggle }: any) => {
         <div className="flex flex-col truncate">
           <span className="text-sm font-semibold">{brandName}</span>
           <span className="text-xs text-slate-500 truncate">
-            Welcome, {userName}
+            Welcome, {user?.fullName} !
           </span>
         </div>
       )}
@@ -116,11 +117,13 @@ const SidebarBody = ({
 };
 
 // -------------------------------- Sidebar Footer --------------------------------
-const SidebarFooter = ({ collapsed, onToggle }: any) => {
+const SidebarFooter = ({ collapsed, onToggle, user }: any) => {
   return (
     <div className="px-3 py-3 border-t border-slate-200">
       <div className="w-full flex items-center justify-start gap-2">
-        <span>Footer</span>
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
       </div>
     </div>
   );
@@ -136,6 +139,7 @@ export const Sidebar = ({
 }: SidebarProps) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
   const [mounted, setMounted] = useState(false);
+  const { user } = useUser();
 
   // Hydration-safe loading + restore collapse state
   useEffect(() => {
@@ -171,7 +175,7 @@ export const Sidebar = ({
     >
       <SidebarHeader
         brandName={brandName}
-        userName={userName}
+        user={user}
         collapsed={collapsed}
         toggle={onToggle ?? toggle}
       />
@@ -182,7 +186,11 @@ export const Sidebar = ({
 
       <Separator />
 
-      <SidebarFooter collapsed={collapsed} onToggle={onToggle ?? toggle} />
+      <SidebarFooter
+        user={user}
+        collapsed={collapsed}
+        onToggle={onToggle ?? toggle}
+      />
     </motion.aside>
   );
 };
