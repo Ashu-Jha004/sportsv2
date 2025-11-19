@@ -7,7 +7,7 @@ import { v2 as cloudinary } from "cloudinary";
 
 const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY!;
 const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET!;
-const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME!;
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!;
 const CLOUDINARY_UPLOAD_FOLDER =
   process.env.CLOUDINARY_UPLOAD_FOLDER ?? "avatars";
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
-        { status: 401 },
+        { status: 401 }
       );
     }
 
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
     const signature = cloudinary.utils.api_sign_request(
       paramsToSign,
-      CLOUDINARY_API_SECRET,
+      CLOUDINARY_API_SECRET
     );
 
     return NextResponse.json(
@@ -69,13 +69,13 @@ export async function POST(request: Request) {
         folder: CLOUDINARY_UPLOAD_FOLDER,
         paramsToSign,
       },
-      { status: 200 },
+      { status: 200 }
     );
   } catch (err) {
     console.error("Cloudinary signature error:", err);
     return NextResponse.json(
       { success: false, error: "Failed to generate upload signature." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

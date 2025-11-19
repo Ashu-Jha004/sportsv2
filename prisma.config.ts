@@ -8,6 +8,7 @@ export default defineConfig({
   },
   engine: "classic",
   datasource: {
-    url: env("DATABASE_URL"),
+    url: env("DATABASE_URL"), // Pooled connection (port 6543)
+    directUrl: env("DIRECT_URL"), // Direct connection (port 5432) for migrations
   },
 });

@@ -7,7 +7,9 @@ datasource db {
   url       = env("DATABASE_URL")   // aws-1-ap-south-1.pooler.supabase.com:6543
   directUrl = env("DIRECT_URL")
 }
-
+// ============================================
+// EXISTING ATHLETE MODEL (ENHANCED)
+// ============================================
 model Athlete {
   id                 String   @id @default(cuid())
   clerkUserId        String   @unique
@@ -23,7 +25,7 @@ model Athlete {
   secondarySport     Sport?
   rank               Rank @default(PAWN)
   class              Class @default(E)
-  roles              String[]
+  roles              Role[] @default([ATHLETE])  // Changed to enum array
   isAdmin            Boolean @default(false)
   country            String
   state              String
@@ -34,10 +36,195 @@ model Athlete {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  // Relations
+  associateProfile     AssociateProfile?
+  associateApplication AssociateApplication?
+  reviewedApplications AssociateApplication[] @relation("AdminReviewer")
+  sentNotifications    Notification[] @relation("NotificationSender")
+  receivedNotifications Notification[] @relation("NotificationRecipient")
+
   @@index([clerkUserId])
   @@index([country, state, city])
   @@index([latitude, longitude])
+  @@index([roles])
 }
+
+// ============================================
+// ASSOCIATE/GUIDE/MODERATOR PROFILE
+// ============================================
+model AssociateProfile {
+  id                String   @id @default(cuid())
+  athleteId         String   @unique
+  athlete           Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  
+  // Professional Information
+  workEmail         String   @unique
+  resumeUrl         String   // Cloudinary or storage URL
+  primaryExpertise  Sport    // Primary sport expertise
+  secondaryExpertise Sport[] // List of secondary sports
+  yearsOfExperience Int
+  
+  // Location (can differ from athlete's personal address)
+  workCountry       String
+  workState         String
+  workCity          String
+  workLatitude      Float
+  workLongitude     Float
+  
+  // Status
+  isActive          Boolean  @default(true)
+  verifiedAt        DateTime? // When admin approved
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([athleteId])
+  @@index([primaryExpertise])
+  @@index([isActive])
+  @@index([workCountry, workState, workCity])
+}
+
+// ============================================
+// ASSOCIATE APPLICATION WORKFLOW
+// ============================================
+model AssociateApplication {
+  id                String              @id @default(cuid())
+  athleteId         String              @unique
+  athlete           Athlete             @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  
+  // Application Details
+  workEmail         String
+  resumeUrl         String
+  primaryExpertise  Sport
+  secondaryExpertise Sport[]
+  yearsOfExperience Int
+  
+  // Location
+  workCountry       String
+  workState         String
+  workCity          String
+  workLatitude      Float
+  workLongitude     Float
+  
+  // Cover Letter / Motivation
+  coverLetter       String?
+  
+  // Application Status
+  status            ApplicationStatus   @default(PENDING)
+  
+  // Admin Review
+  reviewedById      String?
+  reviewedBy        Athlete?            @relation("AdminReviewer", fields: [reviewedById], references: [id])
+  reviewedAt        DateTime?
+  reviewNotes       String?
+  rejectionReason   String?
+  
+  // Add this field
+  canReapplyAfter   DateTime?           // When athlete can reapply after rejection
+  
+  // Timestamps
+  submittedAt       DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([athleteId])
+  @@index([status])
+  @@index([reviewedById])
+  @@index([submittedAt])
+  @@index([canReapplyAfter])  // Add index for efficient queries
+}
+
+
+// ============================================
+// NOTIFICATION SYSTEM (POLYMORPHIC DESIGN)
+// ============================================
+model Notification {
+  id            String           @id @default(cuid())
+  
+  // Recipient
+  recipientId   String
+  recipient     Athlete          @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  // Sender (nullable for system notifications)
+  senderId      String?
+  sender        Athlete?         @relation("NotificationSender", fields: [senderId], references: [id])
+  
+  // Notification Content
+  type          NotificationType
+  title         String
+  message       String
+  
+  // Polymorphic Reference (for linking to related entities)
+  entityType    String?          // e.g., "AssociateApplication", "Post", "Message"
+  entityId      String?          // ID of the related entity
+  
+  // Metadata (JSON for extensibility)
+  metadata      Json?            // Store additional data specific to notification type
+  
+  // Status
+  isRead        Boolean          @default(false)
+  readAt        DateTime?
+  
+  // Action URL (deep link)
+  actionUrl     String?
+  
+  createdAt     DateTime         @default(now())
+  expiresAt     DateTime?        // Optional: for time-sensitive notifications
+
+  @@index([recipientId, isRead])
+  @@index([recipientId, createdAt])
+  @@index([type])
+  @@index([entityType, entityId])
+}
+
+// ============================================
+// ENUMS
+// ============================================
+enum Role {
+  ATHLETE
+  ASSOCIATE     // Guide/Moderator
+  ADMIN
+}
+
+enum ApplicationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum NotificationType {
+  // Application Related
+  APPLICATION_SUBMITTED
+  APPLICATION_APPROVED
+  APPLICATION_REJECTED
+  APPLICATION_UNDER_REVIEW
+  
+  // System Notifications
+  SYSTEM_ANNOUNCEMENT
+  ACCOUNT_UPDATE
+  SECURITY_ALERT
+  
+  // Social Interactions (for future)
+  NEW_FOLLOWER
+  NEW_MESSAGE
+  POST_LIKED
+  POST_COMMENTED
+  MENTION
+  
+  // Associate/Guide Actions (for future)
+  GUIDE_ASSIGNED
+  TRAINING_SCHEDULED
+  EVENT_INVITATION
+  
+  // Admin Actions
+  ROLE_UPDATED
+  PROFILE_FLAGGED
+  
+  // Generic
+  CUSTOM
+}
+
 enum Rank {
   KING
   PAWN
@@ -69,5 +256,14 @@ enum Sport {
   TENNIS
   RUNNING
   SWIMMING
+  BADMINTON
+  VOLLEYBALL
+  HOCKEY
+  ATHLETICS
+  WRESTLING
+  BOXING
+  MARTIAL_ARTS
+  CYCLING
+  GOLF
   OTHER
 }

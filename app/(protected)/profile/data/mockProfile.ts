@@ -1,6 +1,7 @@
 // data/mockProfile.ts
 
 import { ProfileData } from "../types/profile.types";
+import { Store, Users, ShoppingCart } from "lucide-react";
 
 export const mockProfileData: ProfileData = {
   id: "1",
@@ -320,3 +321,66 @@ export const mockMatchData = {
     },
   ],
 };
+
+export const features = [
+  {
+    id: 1,
+    icon: Store,
+    title: "Facilities & Equipment Marketplace",
+    description:
+      "Discover and rent premium sports facilities and equipment at unbeatable prices. Connect directly with facility owners and access top-tier training spaces without breaking the bank.",
+    image:
+      "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
+    features: [
+      "Rent sports facilities hourly or daily",
+      "Buy or rent professional equipment",
+      "Verified facility owners",
+      "Affordable pricing for students & athletes",
+      "Instant booking confirmation",
+    ],
+    ctaText: "Explore Marketplace",
+    ctaLink: "/marketplace",
+    gradient: "from-blue-500 to-cyan-500",
+    badgeText: "Most Popular",
+  },
+  {
+    id: 2,
+    icon: Users,
+    title: "Become a Sparta Associate",
+    description:
+      "Transform your athletic expertise into income. Join our network of guides, coaches, referees, and match overseers to provide professional services and earn revenue.",
+    image:
+      "https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=800&q=80",
+    features: [
+      "Stats updates & match oversight",
+      "Professional coaching opportunities",
+      "Referee & officiating roles",
+      "Flexible scheduling",
+      "Competitive compensation",
+    ],
+    ctaText: "Join as Associate",
+    ctaLink: "/associate/onboarding",
+    gradient: "from-purple-500 to-pink-500",
+    badgeText: "Earn Revenue",
+  },
+  {
+    id: 3,
+    icon: ShoppingCart,
+    title: "Equipment Store",
+    description:
+      "Shop from a curated selection of sports equipment at student-friendly prices. From training gear to competition-grade equipment, find everything you need in one place.",
+    image:
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&q=80",
+    features: [
+      "Premium sports equipment",
+      "Student discount programs",
+      "Rent-to-own options",
+      "Quality-verified products",
+      "Fast delivery across India",
+    ],
+    ctaText: "Browse Equipment",
+    ctaLink: "/equipment",
+    gradient: "from-orange-500 to-red-500",
+    badgeText: "New",
+  },
+];

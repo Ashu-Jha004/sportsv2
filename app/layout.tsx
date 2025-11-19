@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ReactQueryProvider } from "@/components/providers/react-query-provider";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -131,6 +132,7 @@ export default function RootLayout({
         >
           <ReactQueryProvider>
             {children}
+            <Toaster position="top-right" richColors />
             <Analytics />
           </ReactQueryProvider>
         </body>
