@@ -4,6 +4,9 @@ import { AssociateApplicationForm } from "./components/associate/AssociateApplic
 import { AssociateDashboard } from "./components/associate/AssociateDashboard";
 import { ApplicationStatusView } from "./components/associate/ApplicationStatusView";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AssociatePage() {
   const status = await getAssociateStatus();
 

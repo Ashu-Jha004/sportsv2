@@ -2,6 +2,10 @@ import { verifyAdminAccess } from "./lib/admin-auth";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminLayout({
   children,
 }: {

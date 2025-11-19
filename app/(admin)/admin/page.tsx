@@ -1,6 +1,10 @@
 import { getApplicationStats } from "../actions/admin-actions";
 import Link from "next/link";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminDashboard() {
   const stats = await getApplicationStats();
 
