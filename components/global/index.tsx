@@ -9,12 +9,12 @@ export default function LayoutShell({
   children,
   menus,
   brandName = "Brand",
-  userName = "User",
+  userName,
 }: {
   children: React.ReactNode;
   menus: MenuItem[];
   brandName?: string;
-  userName?: string;
+  userName?: any;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
