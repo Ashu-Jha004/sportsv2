@@ -1,74 +1,45 @@
-// components/profile/ProfileHeader.tsx
+import React, { useState } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"; // shadcn components
 
-"use client";
+import { Badge } from "@/components/ui/badge";
+import { useAthlete } from "../hooks/use-athlete";
 
-import { useState } from "react";
-import { ProfileData } from "../types/profile.types";
-import { ProfileBanner } from "./HeaderComponents/ProfileBanner";
-import { ProfileInfo } from "./HeaderComponents/ProfileInfo";
-import { ProfileStats } from "./HeaderComponents/ProfileStats";
-import { EditProfileDialog } from "./HeaderComponents/EditProfileDialog";
-import { cn } from "@/lib/utils";
-
-interface ProfileHeaderProps {
-  profile: ProfileData;
+const BANNER_URL =
+  "https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.4&auto=format&fit=crop&w=1600&q=80"; // static URL
+interface Athlete {
+  id: string | undefined;
+  username?: string | undefined;
+  email: string | undefined;
+  firstName: string | undefined;
+  lastName: string | undefined;
+  fullName: string | undefined;
+  profileImage?: string | undefined | undefined;
+  dateOfBirth: string | undefined;
+  gender: string | undefined;
+  bio: string | undefined;
+  primarySport: string | undefined;
+  secondarySport: string | undefined;
+  rank: string | undefined;
+  class: string | undefined;
+  roles: string | undefined[];
+  location: Location;
+  createdAt: string | undefined;
+  updatedAt: string | undefined;
   isOwnProfile?: boolean;
-  className?: string;
 }
-
-export default function ProfileHeader({
-  profile,
-  isOwnProfile = true,
-  className,
-}: ProfileHeaderProps) {
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [profileData, setProfileData] = useState(profile);
-
-  const handleSaveProfile = (updatedProfile: Partial<ProfileData>) => {
-    // Merge updated data with existing profile
-    setProfileData((prev) => ({
-      ...prev,
-      ...updatedProfile,
-    }));
-
-    // Here you would typically make an API call
-    console.log("Profile updated:", updatedProfile);
-  };
-
+export default function AthleteHeader({
+  athlete,
+}: {
+  athlete: any;
+  isOwnProfile: boolean;
+}) {
   return (
-    <div
-      className={cn(
-        "w-full bg-white shadow-lg rounded-2xl overflow-hidden",
-        className
-      )}
-    >
-      {/* Banner Section */}
-      <ProfileBanner
-        bannerImage={profileData.bannerImage}
-        isOwnProfile={isOwnProfile}
+    <div className="relative">
+      {/* Banner Image */}
+      <div
+        className="h-48 w-full bg-cover bg-center"
+        style={{ backgroundImage: `url(${BANNER_URL})` }}
       />
-
-      {/* Profile Info Section */}
-      <ProfileInfo
-        profile={profileData}
-        isOwnProfile={isOwnProfile}
-        onEditClick={() => setIsEditDialogOpen(true)}
-      />
-
-      {/* Stats Section */}
-      <div className="px-4 md:px-6 lg:px-8 py-6">
-        <ProfileStats stats={profileData.stats} />
-      </div>
-
-      {/* Edit Dialog */}
-      {isOwnProfile && (
-        <EditProfileDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          profile={profileData}
-          onSave={handleSaveProfile}
-        />
-      )}
     </div>
   );
 }

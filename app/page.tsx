@@ -7,7 +7,7 @@ import { ArrowRight, Trophy, Users, Activity } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white via-blue-50 to-white text-gray-900 flex flex-col">
+    <main className="min-h-screen bg-linear-to-b from-white via-blue-50 to-white text-gray-900 flex flex-col">
       {/* HERO SECTION */}
       <section className="flex flex-col-reverse md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-16 md:py-24 gap-10">
         {/* Text */}
@@ -69,7 +69,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             <motion.div
               whileHover={{ y: -8 }}
-              className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-2xl shadow-md hover:shadow-xl transition"
+              className="bg-linear-to-br from-blue-50 to-white p-8 rounded-2xl shadow-md hover:shadow-xl transition"
             >
               <Trophy size={42} className="text-blue-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">For Athletes</h3>
@@ -81,7 +81,7 @@ export default function HomePage() {
 
             <motion.div
               whileHover={{ y: -8 }}
-              className="bg-gradient-to-br from-amber-50 to-white p-8 rounded-2xl shadow-md hover:shadow-xl transition"
+              className="bg-linear-to-br from-amber-50 to-white p-8 rounded-2xl shadow-md hover:shadow-xl transition"
             >
               <Users size={42} className="text-amber-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">For Coaches</h3>
@@ -93,7 +93,7 @@ export default function HomePage() {
 
             <motion.div
               whileHover={{ y: -8 }}
-              className="bg-gradient-to-br from-green-50 to-white p-8 rounded-2xl shadow-md hover:shadow-xl transition"
+              className="bg-linear-to-br from-green-50 to-white p-8 rounded-2xl shadow-md hover:shadow-xl transition"
             >
               <Activity size={42} className="text-green-500 mx-auto mb-4" />
               <h3 className="text-xl font-semibold mb-2">For Communities</h3>
@@ -107,7 +107,7 @@ export default function HomePage() {
       </section>
 
       {/* VISUAL / CTA SECTION */}
-      <section className="bg-gradient-to-r from-blue-600 to-indigo-500 text-white py-24 px-6 text-center">
+      <section className="bg-linear-to-r from-blue-600 to-indigo-500 text-white py-24 px-6 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
