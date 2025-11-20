@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const formattedRequests = requests.map((r) => ({
+    const formattedRequests = requests.map((r: any) => ({
       id: r.id,
       createdAt: r.createdAt,
       sender: {

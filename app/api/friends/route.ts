@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const friends = friendships.map((f) => ({
+    const friends = friendships.map((f: any) => ({
       id: f.userB.id,
       username: f.userB.username,
       fullName: `${f.userB.firstName} ${f.userB.lastName}`,

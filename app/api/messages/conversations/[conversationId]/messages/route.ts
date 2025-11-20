@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { conversationId: string } }
+  { params }: { params: Promise<{ conversationId: string }> }
 ) {
-  const { conversationId } = params;
+  const { conversationId } = await params;
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor"); // optional cursor based pagination
   const limit = Number(url.searchParams.get("limit") ?? "20");
@@ -41,7 +41,7 @@ export async function GET(
     });
     if (
       !conversation ||
-      !conversation.participants.some((p) => p.id === athlete.id)
+      !conversation.participants.some((p: any) => p.id === athlete.id)
     ) {
       return NextResponse.json(
         { success: false, error: "Unauthorized to view messages" },

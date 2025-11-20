@@ -123,10 +123,10 @@ export async function POST(request: NextRequest) {
 
     // Filter conversations with exactly 2 participants (the two users)
     let conversation = conversations.find(
-      (c) =>
+      (c: any) =>
         c.participants.length === 2 &&
-        c.participants.some((p) => p.id === sender.id) &&
-        c.participants.some((p) => p.id === receiver.id)
+        c.participants.some((p: any) => p.id === sender.id) &&
+        c.participants.some((p: any) => p.id === receiver.id)
     );
 
     if (!conversation) {
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
       message,
       conversation: {
         id: conversation.id,
-        participants: conversation.participants.map((p) => ({
+        participants: conversation.participants.map((p: any) => ({
           id: p.id,
           username: p.username,
           fullName: `${p.firstName} ${p.lastName}`,

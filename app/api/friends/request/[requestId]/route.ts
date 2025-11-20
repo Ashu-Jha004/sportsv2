@@ -8,11 +8,11 @@ export const dynamic = "force-dynamic";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { requestId: string } }
+  { params }: { params: Promise<{ requestId: string }> }
 ) {
   const startTime = Date.now();
   const requestIdLog = Math.random().toString(36).substring(7);
-  const { requestId } = params;
+  const { requestId } = await params;
 
   try {
     const { userId } = await auth();
