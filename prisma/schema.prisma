@@ -4,6 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================
@@ -240,6 +242,12 @@ model Message {
 imageUrl String?
   @@index([conversationId])
   @@index([senderId])
+}
+model match{
+id             String       @id @default(cuid())
+matchTitle       String?
+wins            Int?
+losses          Int?
 }
 
 // ============================================
