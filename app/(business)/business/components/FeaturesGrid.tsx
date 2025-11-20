@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import FeatureCard from "./FeatureCard";
-import { features } from "process";
+import { features } from "@/data/mockProfile";
 export default function FeaturesGrid() {
   return (
     <section className="py-20 px-4" id="features">
