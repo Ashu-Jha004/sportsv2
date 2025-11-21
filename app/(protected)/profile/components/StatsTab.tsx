@@ -1,36 +1,47 @@
+// components/StatsTab.tsx
+
 "use client";
 
 import React from "react";
+import { StatsTabProps } from "@/types/profile/athlete-profile.types";
+import { Progress } from "@/components/ui/progress";
+import { BarChart2 } from "lucide-react";
 
-interface Stat {
-  name: string;
-  value: number;
-  unit?: string;
-}
+const statLabels = [
+  { key: "strength", label: "Strength" },
+  { key: "speed", label: "Speed" },
+  { key: "agility", label: "Agility" },
+  { key: "endurance", label: "Endurance" },
+  { key: "power", label: "Power" },
+  { key: "flexibility", label: "Flexibility" },
+];
 
-interface StatsTabProps {
-  stats: Stat[];
-}
-
-export function StatsTab({ stats }: StatsTabProps) {
-  if (!stats || stats.length === 0) {
-    return <p className="text-gray-600">No stats available yet.</p>;
+export default function StatsTab({ stats }: StatsTabProps) {
+  if (!stats) {
+    return (
+      <p className="text-center text-gray-500">Stats data not available.</p>
+    );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {stats.map(({ name, value, unit }) => (
-        <div
-          key={name}
-          className="bg-white p-6 rounded-lg shadow flex flex-col items-center"
-        >
-          <p className="text-3xl font-bold text-blue-600">
-            {value}
-            {unit ? ` ${unit}` : ""}
-          </p>
-          <p className="mt-2 text-gray-700">{name}</p>
-        </div>
-      ))}
-    </div>
+    <section className="max-w-3xl mx-auto space-y-6">
+      <h2 className="text-xl font-semibold flex items-center gap-2 text-gray-900">
+        <BarChart2 size={24} />
+        Physical Stats
+      </h2>
+
+      {statLabels.map(({ key, label }) => {
+        const statValue = (stats as any)[key] ?? 0;
+        return (
+          <div key={key}>
+            <div className="flex justify-between mb-1 font-medium text-gray-700">
+              <span>{label}</span>
+              <span>{statValue}%</span>
+            </div>
+            <Progress value={statValue} className="h-4 rounded-full" />
+          </div>
+        );
+      })}
+    </section>
   );
 }

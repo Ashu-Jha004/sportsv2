@@ -1,90 +1,235 @@
+// stores/athlete-profile-store.ts - FIXED
+
+/**
+ * =============================================================================
+ * ATHLETE PROFILE STORE (FIXED)
+ * =============================================================================
+ * Zustand store for managing athlete profile state
+ * Includes profile data, stats, matches, and media
+ */
+
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
-import { AthleteData } from "@/app/(protected)/profile/hooks/use-athlete";
+import { devtools } from "zustand/middleware";
+import type {
+  AthleteProfile,
+  AthleteStats,
+  MatchHistory,
+  MediaItem,
+  ProfileStoreState,
+} from "@/types/profile/athlete-profile.types";
 
-interface AthleteState {
-  // Current athlete profile data (null if none)
-  currentAthlete: AthleteData | null;
+// =============================================================================
+// INITIAL STATE - FIXED (removed 'as const')
+// =============================================================================
 
-  // UI state to manage edit mode and current editing section
-  isEditing: boolean;
-  editSection: string | null;
+const INITIAL_STATE = {
+  profile: null as AthleteProfile | null,
+  stats: null as AthleteStats | null,
+  matches: [] as MatchHistory[],
+  media: [] as MediaItem[],
+  isEditDialogOpen: false,
+  isLoadingLocation: false,
+};
 
-  // Actions to update athlete profile data in store
-  setCurrentAthlete: (athlete: AthleteData | null) => void;
-  updateCurrentAthlete: (updates: Partial<AthleteData>) => void;
-  clearCurrentAthlete: () => void;
+// =============================================================================
+// STORE
+// =============================================================================
 
-  // Actions to update UI state
-  setIsEditing: (isEditing: boolean) => void;
-  setEditSection: (section: string | null) => void;
-}
-
-export const useAthleteStore = create<AthleteState>()(
+export const useAthleteProfileStore = create<ProfileStoreState>()(
   devtools(
-    persist(
-      (set, get) => ({
-        currentAthlete: null,
-        isEditing: false,
-        editSection: null,
+    (set) => ({
+      // State
+      ...INITIAL_STATE,
 
-        setCurrentAthlete: (athlete) => {
-          console.log(
-            "📦 [Zustand] Setting current athlete:",
-            athlete?.username
-          );
-          set({ currentAthlete: athlete }, false, "setCurrentAthlete");
-        },
+      // =============================================================================
+      // PROFILE ACTIONS
+      // =============================================================================
 
-        updateCurrentAthlete: (updates) => {
-          const current = get().currentAthlete;
-          if (!current) {
-            console.warn("⚠️  [Zustand] No current athlete to update");
-            return;
-          }
+      /**
+       * Set athlete profile data
+       */
+      setProfile: (profile) => {
+        set({ profile }, false, "profile/set");
+      },
 
-          const updated = { ...current, ...updates };
-          console.log("📦 [Zustand] Updating current athlete:", {
-            username: current.username,
-            fields: Object.keys(updates),
-          });
+      /**
+       * Set athlete stats
+       */
+      setStats: (stats) => {
+        set({ stats }, false, "stats/set");
+      },
 
-          set({ currentAthlete: updated }, false, "updateCurrentAthlete");
-        },
+      /**
+       * Set match history
+       */
+      setMatches: (matches) => {
+        set({ matches }, false, "matches/set");
+      },
 
-        clearCurrentAthlete: () => {
-          console.log("📦 [Zustand] Clearing current athlete");
-          set({ currentAthlete: null }, false, "clearCurrentAthlete");
-        },
+      /**
+       * Set media gallery
+       */
+      setMedia: (media) => {
+        set({ media }, false, "media/set");
+      },
 
-        setIsEditing: (isEditing) => {
-          console.log("📦 [Zustand] Set editing mode:", isEditing);
-          set({ isEditing }, false, "setIsEditing");
-        },
+      // =============================================================================
+      // UI ACTIONS
+      // =============================================================================
 
-        setEditSection: (section) => {
-          console.log("📦 [Zustand] Set edit section:", section);
-          set({ editSection: section }, false, "setEditSection");
-        },
-      }),
-      {
-        name: "athlete-store",
-        partialize: (state) => ({
-          currentAthlete: state.currentAthlete,
-        }),
-      }
-    ),
-    { name: "AthleteStore" }
+      /**
+       * Open edit profile dialog
+       */
+      openEditDialog: () => {
+        set({ isEditDialogOpen: true }, false, "dialog/open");
+      },
+
+      /**
+       * Close edit profile dialog
+       */
+      closeEditDialog: () => {
+        set({ isEditDialogOpen: false }, false, "dialog/close");
+      },
+
+      /**
+       * Set location loading state
+       */
+      setLoadingLocation: (loading) => {
+        set({ isLoadingLocation: loading }, false, "location/loading");
+      },
+
+      // =============================================================================
+      // RESET
+      // =============================================================================
+
+      /**
+       * Reset entire store to initial state
+       */
+      resetStore: () => {
+        set({ ...INITIAL_STATE }, false, "store/reset");
+      },
+    }),
+    {
+      name: "athlete-profile-store",
+      enabled: process.env.NODE_ENV === "development",
+    }
   )
 );
 
-// Common selectors for convenience
+// =============================================================================
+// SELECTORS (Optimized)
+// =============================================================================
 
-export const useCurrentAthleteUsername = () =>
-  useAthleteStore((state) => state.currentAthlete?.username);
+/**
+ * Get profile data
+ */
+export const useProfile = () =>
+  useAthleteProfileStore((state) => state.profile);
 
-export const useAthleteLocation = () =>
-  useAthleteStore((state) => state.currentAthlete?.location);
+/**
+ * Get stats data
+ */
+export const useStats = () => useAthleteProfileStore((state) => state.stats);
 
-export const useAthleteRoles = () =>
-  useAthleteStore((state) => state.currentAthlete?.roles ?? []);
+/**
+ * Get matches data
+ */
+export const useMatches = () =>
+  useAthleteProfileStore((state) => state.matches);
+
+/**
+ * Get media data
+ */
+export const useMedia = () => useAthleteProfileStore((state) => state.media);
+
+/**
+ * Get edit dialog state
+ */
+export const useEditDialogState = () =>
+  useAthleteProfileStore((state) => state.isEditDialogOpen);
+
+/**
+ * Get location loading state
+ */
+export const useLocationLoading = () =>
+  useAthleteProfileStore((state) => state.isLoadingLocation);
+
+/**
+ * Get all actions
+ */
+export const useProfileActions = () =>
+  useAthleteProfileStore((state) => ({
+    setProfile: state.setProfile,
+    setStats: state.setStats,
+    setMatches: state.setMatches,
+    setMedia: state.setMedia,
+    openEditDialog: state.openEditDialog,
+    closeEditDialog: state.closeEditDialog,
+    setLoadingLocation: state.setLoadingLocation,
+    resetStore: state.resetStore,
+  }));
+
+// =============================================================================
+// COMPUTED SELECTORS
+// =============================================================================
+
+/**
+ * Get profile display name
+ */
+export const useProfileDisplayName = () =>
+  useAthleteProfileStore((state) => {
+    if (!state.profile) return "Anonymous";
+    return `${state.profile.firstName} ${state.profile.lastName}`;
+  });
+
+/**
+ * Get profile location string
+ */
+export const useProfileLocation = () =>
+  useAthleteProfileStore((state) => {
+    if (!state.profile) return "";
+    const { city, state: st, country } = state.profile;
+    return [city, st, country].filter(Boolean).join(", ");
+  });
+
+/**
+ * Get match statistics summary
+ */
+export const useMatchStatistics = () =>
+  useAthleteProfileStore((state) => {
+    const matches = state.matches;
+
+    return {
+      total: matches.length,
+      wins: matches.filter((m) => m.result === "WIN").length,
+      losses: matches.filter((m) => m.result === "LOSS").length,
+      draws: matches.filter((m) => m.result === "DRAW").length,
+      winRate:
+        matches.length > 0
+          ? Math.round(
+              (matches.filter((m) => m.result === "WIN").length /
+                matches.length) *
+                100
+            )
+          : 0,
+    };
+  });
+
+/**
+ * Check if profile is complete
+ */
+export const useIsProfileComplete = () =>
+  useAthleteProfileStore((state) => {
+    const profile = state.profile;
+    if (!profile) return false;
+
+    return !!(
+      profile.username &&
+      profile.firstName &&
+      profile.lastName &&
+      profile.bio &&
+      profile.primarySport &&
+      profile.city &&
+      profile.country
+    );
+  });

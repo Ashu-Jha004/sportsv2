@@ -1,233 +1,298 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
+import React, { useEffect, useState, useMemo } from "react";
+import * as z from "zod";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@/components/ui/button";
+import { editProfileSchema } from "@/app/(protected)/profile/schemas/edit-profile-schema";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useUpdateAthlete } from "../../profile/hooks/use-athlete"; // Your React Query mutation hook
-import axios from "axios";
-
-const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  username: z.string().min(3, "Username must be at least 3 chars"),
-  email: z.string().email("Invalid email"),
-  primarySport: z.string().min(1, "Primary sport required"),
-  secondarySport: z.string().optional(),
-  dateOfBirth: z.string().min(1, "Date of birth required"),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
-  profileImageUrl: z.string().url().optional(),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { useProfileActions, useProfile } from "@/stores/athlete/athlete-store";
+import { useUpdateProfile } from "@/app/(protected)/profile/hooks/profile/use-athlete-profile";
+import { Sport } from "@/types/profile/athlete-profile.types";
+import { MapPin } from "lucide-react";
 
 interface EditProfileDialogProps {
-  athlete: ProfileFormData;
-  onClose: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EditProfileDialog({
-  athlete,
-  onClose,
+export default function EditProfileDialog({
+  isOpen,
+  onOpenChange,
 }: EditProfileDialogProps) {
-  const [uploading, setUploading] = useState(false);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const profile = useProfile();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setValue,
-  } = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      ...athlete,
-      profileImageUrl: athlete.profileImageUrl ?? athlete.profileImageUrl ?? "",
-    },
+  const { setLoadingLocation } = useProfileActions();
+  const updateProfileMutation = useUpdateProfile();
+
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Memoized default form values with defaults for optional fields
+  const defaultValues = useMemo(
+    () => ({
+      username: profile?.username ?? "",
+      firstName: profile?.firstName ?? "",
+      lastName: profile?.lastName ?? "",
+      bio: profile?.bio || "",
+      primarySport: profile?.primarySport ?? Sport.OTHER,
+      secondarySports: profile?.secondarySports ?? [],
+      city: profile?.city ?? "",
+      state: profile?.state ?? "",
+      country: profile?.country ?? "",
+      latitude: profile?.latitude,
+      longitude: profile?.longitude,
+    }),
+    [profile]
+  );
+
+  const form = useForm<z.infer<typeof editProfileSchema>>({
+    resolver: zodResolver(editProfileSchema),
+    defaultValues,
   });
 
-  // Update lat/lng using browser geolocation
   useEffect(() => {
+    form.reset(defaultValues);
+  }, [defaultValues, form]);
+
+  // getCurrentLocation as a const inside component to avoid duplicate identifier errors
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation not supported by your browser.");
+      return;
+    }
+    setLocationError(null);
+    setLoadingLocation(true);
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setValue("latitude", pos.coords.latitude);
-        setValue("longitude", pos.coords.longitude);
+      (position) => {
+        form.setValue("latitude", position.coords.latitude);
+        form.setValue("longitude", position.coords.longitude);
+        setLoadingLocation(false);
       },
       () => {
-        // Defer silently if unavailable
-      }
+        setLocationError("Unable to retrieve location. Please try again.");
+        setLoadingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
     );
-  }, [setValue]);
+  };
 
-  const { mutateAsync: updateProfile } = useUpdateAthlete();
-
-  async function onSubmit(data: ProfileFormData) {
+  const onSubmit: SubmitHandler<z.infer<typeof editProfileSchema>> = async (
+    data
+  ) => {
     try {
-      const updatedData = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        username: data.username,
-        email: data.email,
-        primarySport: data.primarySport,
-        secondarySport: data.secondarySport,
-        dateOfBirth: data.dateOfBirth,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        profileImage: uploadedImageUrl ?? data.profileImageUrl,
-      };
-      await updateProfile(updatedData);
-      toast.success("Profile updated successfully!");
-      onClose();
+      await updateProfileMutation.mutateAsync(data);
+      onOpenChange(false);
     } catch (error) {
-      toast.error("Failed to update profile. Please try again.");
-      console.error("[EditProfileDialog] update error:", error);
+      console.error("Update failed:", error);
     }
-  }
-
-  // Cloudinary Image Upload
-  async function onImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploading(true);
-
-    const file = files[0];
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append(
-        "upload_preset",
-        process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!
-      );
-      formData.append(
-        "folder",
-        `messages/${new Date().toISOString().split("T")[0]}`
-      );
-
-      const res = await axios.post(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        formData
-      );
-
-      setUploadedImageUrl(res.data.secure_url);
-      toast.success("Image uploaded successfully.");
-    } catch (err) {
-      toast.error("Image upload failed.");
-      console.error("[EditProfileDialog] upload error:", err);
-    } finally {
-      setUploading(false);
-    }
-  }
+  };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4 p-4 w-full max-w-lg"
-    >
-      <label className="block">
-        <span>First Name</span>
-        <Input {...register("firstName")} />
-        {errors.firstName && (
-          <p className="text-red-600">{errors.firstName.message}</p>
-        )}
-      </label>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit Profile</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg rounded-lg">
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>Update your profile details</DialogDescription>
+        </DialogHeader>
 
-      <label className="block">
-        <span>Last Name</span>
-        <Input {...register("lastName")} />
-        {errors.lastName && (
-          <p className="text-red-600">{errors.lastName.message}</p>
-        )}
-      </label>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <label htmlFor="username" className="block mb-1 font-medium">
+              Username
+            </label>
+            <Input id="username" {...form.register("username")} />
+            {form.formState.errors.username && (
+              <p className="text-red-600 text-sm">
+                {form.formState.errors.username.message}
+              </p>
+            )}
+          </div>
 
-      <label className="block">
-        <span>Username</span>
-        <Input {...register("username")} />
-        {errors.username && (
-          <p className="text-red-600">{errors.username.message}</p>
-        )}
-      </label>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="firstName" className="block mb-1 font-medium">
+                First Name
+              </label>
+              <Input id="firstName" {...form.register("firstName")} />
+              {form.formState.errors.firstName && (
+                <p className="text-red-600 text-sm">
+                  {form.formState.errors.firstName.message}
+                </p>
+              )}
+            </div>
+            <div>
+              <label htmlFor="lastName" className="block mb-1 font-medium">
+                Last Name
+              </label>
+              <Input id="lastName" {...form.register("lastName")} />
+              {form.formState.errors.lastName && (
+                <p className="text-red-600 text-sm">
+                  {form.formState.errors.lastName.message}
+                </p>
+              )}
+            </div>
+          </div>
 
-      <label className="block">
-        <span>Email</span>
-        <Input type="email" {...register("email")} />
-        {errors.email && <p className="text-red-600">{errors.email.message}</p>}
-      </label>
+          <div>
+            <label htmlFor="bio" className="block mb-1 font-medium">
+              Bio
+            </label>
+            <Textarea id="bio" rows={4} {...form.register("bio")} />
+            {form.formState.errors.bio && (
+              <p className="text-red-600 text-sm">
+                {form.formState.errors.bio.message}
+              </p>
+            )}
+          </div>
 
-      <label className="block">
-        <span>Primary Sport</span>
-        <Input {...register("primarySport")} />
-        {errors.primarySport && (
-          <p className="text-red-600">{errors.primarySport.message}</p>
-        )}
-      </label>
+          <div>
+            <label className="block mb-1 font-medium">Primary Sport</label>
+            <Select
+              onValueChange={(val) =>
+                form.setValue("primarySport", val as Sport)
+              }
+              value={form.watch("primarySport") ?? ""}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select primary sport" />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.values(Sport) as string[]).map((sport) => (
+                  <SelectItem key={sport} value={sport}>
+                    {sport}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <label className="block">
-        <span>Secondary Sport</span>
-        <Input {...register("secondarySport")} />
-      </label>
+          <div>
+            <label className="block mb-1 font-medium">Secondary Sports</label>
+            <Select
+              onValueChange={(val) =>
+                form.setValue("secondarySports", val ? [val as Sport] : [])
+              }
+              value={form.watch("secondarySports")?.[0] ?? ""}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select secondary sport" />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.values(Sport) as string[]).map((sport) => (
+                  <SelectItem key={sport} value={sport}>
+                    {sport}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <label className="block">
-        <span>Date of Birth</span>
-        <Input type="date" {...register("dateOfBirth")} />
-        {errors.dateOfBirth && (
-          <p className="text-red-600">{errors.dateOfBirth.message}</p>
-        )}
-      </label>
+          <div>
+            <label htmlFor="city" className="block mb-1 font-medium">
+              City
+            </label>
+            <Input id="city" {...form.register("city")} />
+            {form.formState.errors.city && (
+              <p className="text-red-600 text-sm">
+                {form.formState.errors.city.message}
+              </p>
+            )}
+          </div>
 
-      <label className="block">
-        <span>Profile Image</span>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={onImageChange}
-          disabled={uploading}
-        />
-        {uploading && <p>Uploading image...</p>}
-        {uploadedImageUrl && (
-          <img
-            className="mt-2 h-24 w-24 object-cover rounded"
-            src={uploadedImageUrl}
-            alt="Uploaded profile"
-          />
-        )}
-      </label>
+          <div>
+            <label htmlFor="state" className="block mb-1 font-medium">
+              State
+            </label>
+            <Input id="state" {...form.register("state")} />
+            {form.formState.errors.state && (
+              <p className="text-red-600 text-sm">
+                {form.formState.errors.state.message}
+              </p>
+            )}
+          </div>
 
-      <label className="block">
-        <span>Latitude</span>
-        <Input
-          type="number"
-          step="any"
-          {...register("latitude", { valueAsNumber: true })}
-        />
-      </label>
+          <div>
+            <label htmlFor="country" className="block mb-1 font-medium">
+              Country
+            </label>
+            <Input id="country" {...form.register("country")} />
+            {form.formState.errors.country && (
+              <p className="text-red-600 text-sm">
+                {form.formState.errors.country.message}
+              </p>
+            )}
+          </div>
 
-      <label className="block">
-        <span>Longitude</span>
-        <Input
-          type="number"
-          step="any"
-          {...register("longitude", { valueAsNumber: true })}
-        />
-      </label>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <label htmlFor="latitude" className="block mb-1 font-medium">
+                Latitude
+              </label>
+              <Input
+                id="latitude"
+                type="number"
+                step="any"
+                {...form.register("latitude", { valueAsNumber: true })}
+              />
+            </div>
+            <div className="flex-1">
+              <label htmlFor="longitude" className="block mb-1 font-medium">
+                Longitude
+              </label>
+              <Input
+                id="longitude"
+                type="number"
+                step="any"
+                {...form.register("longitude", { valueAsNumber: true })}
+              />
+            </div>
+            <Button
+              type="button"
+              onClick={getCurrentLocation}
+              variant="outline"
+              className="mt-6"
+              title="Use browser location"
+            >
+              <MapPin size={16} />
+            </Button>
+          </div>
 
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          Save
-        </Button>
-      </div>
-    </form>
+          {locationError && (
+            <p className="text-sm text-red-600">{locationError}</p>
+          )}
+
+          <div className="flex justify-end gap-4 mt-6">
+            <DialogClose asChild>
+              <Button variant="ghost">Cancel</Button>
+            </DialogClose>
+            <Button type="submit" disabled={updateProfileMutation.isPending}>
+              {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

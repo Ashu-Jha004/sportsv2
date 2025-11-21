@@ -2,7 +2,7 @@
 
 import LayoutShell from "@/components/global";
 import { MENU_ITEMS } from "@/components/global/types/types";
-import { useRouter } from "next/navigation";
+import { redirect } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 
 export default function RootLayout({
@@ -10,8 +10,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { user } = useUser();
+  // if (!user) {
+  //   redirect("/auth/sign-in");
+  // }
 
   return (
     <LayoutShell

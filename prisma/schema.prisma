@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -12,84 +12,366 @@ datasource db {
 // EXISTING ATHLETE MODEL (ENHANCED)
 // ============================================
 model Athlete {
-  id                    String              @id @default(cuid())
-  clerkUserId           String              @unique
-  username              String              @unique
-  email                 String              @unique
-  firstName             String
-  lastName              String
-  profileImage          String?
-  dateOfBirth           DateTime
-  gender                Gender
-  bio                   String?
-  primarySport          Sport
-  secondarySport        Sport?
-  rank                  Rank                @default(PAWN)
-  class                 Class               @default(E)
-  roles                 Role[]              @default([ATHLETE])
-  isAdmin               Boolean             @default(false)
-  country               String
-  state                 String
-  city                  String
-  latitude              Float
-  longitude             Float
-  onboardingComplete    Boolean             @default(false)
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  id                 String           @id @default(cuid())
+  clerkUserId        String           @unique
+  username           String           @unique
+  email              String           @unique
+  firstName          String
+  lastName           String
+  profileImage       String?
+  dateOfBirth        DateTime
+  gender             Gender
+  bio                String?
+  primarySport       Sport
+  secondarySport     Sport?
+  rank               Rank             @default(PAWN)
+  class              Class            @default(E)
+  roles              Role[]           @default([ATHLETE])
+  isAdmin            Boolean          @default(false)
+  country            String
+  state              String
+  city               String
+  latitude           Float
+  longitude          Float
+  onboardingComplete Boolean          @default(false)
+  counters           AthleteCounters?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   // Relations
-  associateProfile       AssociateProfile?
-  associateApplication   AssociateApplication?
-  reviewedApplications   AssociateApplication[] @relation("AdminReviewer")
-  sentNotifications      Notification[]       @relation("NotificationSender")
-  receivedNotifications  Notification[]       @relation("NotificationRecipient")
+  // Evaluation requests sent by this athlete
+  evaluationRequests     PhysicalEvaluationRequest[]
+  // Stats access permissions granted to guides
+  statsAccessPermissions StatsAccessPermission[]
+  // Stats updates received from guides
+  statsUpdates           StatsUpdate[]
+  // Stats access requests from guides
+  statsAccessRequests    StatsAccessRequest[]        @relation("AthleteStatsAccessRequests")
 
-  // Friendships
-  sentFriendRequests     FriendRequest[]      @relation("FriendRequestSender")
-  receivedFriendRequests FriendRequest[]      @relation("FriendRequestReceiver")
+  associateProfile     AssociateProfile?
+  associateApplication AssociateApplication?
+  stats                Stats?
+  reviewedApplications AssociateApplication[] @relation("AdminReviewer")
+  notifications        Notification[]         @relation("AthleteNotifications")
+  actorNotifications   Notification[]         @relation("NotificationActor")
 
-  friendshipsAsUserA     Friendship[]         @relation("FriendshipUserA")
-  friendshipsAsUserB     Friendship[]         @relation("FriendshipUserB")
+  // Follower/Following
+  followers Follow[] @relation("AthleteFollowing")
+  following Follow[] @relation("AthleteFollowers")
 
   // Messaging
-  conversations          Conversation[]       @relation("ConversationParticipants")
-  messagesSent           Message[]            @relation("MessagesSent")
+  conversations Conversation[] @relation("ConversationParticipants")
+  messagesSent  Message[]      @relation("MessagesSent")
 
   @@index([clerkUserId])
   @@index([country, state, city])
   @@index([username, firstName, email])
-  @@index([latitude, longitude])
+  @@index([latitude, longitude, primarySport])
   @@index([roles])
+}
+
+// Stats access request from guide to user (after verification)
+model StatsAccessRequest {
+  id                  String       @id @default(cuid())
+  evaluationDetailsId String       @unique
+  associateId         String
+  athleteId           String
+  status              AccessStatus @default(REQUESTED)
+  message             String?
+
+  associate AssociateProfile @relation(fields: [associateId], references: [id], onDelete: Cascade)
+  athlete   Athlete          @relation("AthleteStatsAccessRequests", fields: [athleteId], references: [id], onDelete: Cascade)
+
+  // Related permission (if granted)
+  permission StatsAccessPermission?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([associateId])
+  @@index([athleteId])
+  @@map("stats_access_requests")
+}
+
+// Permission granted by user to guide for stats access
+model StatsAccessPermission {
+  id                   String       @id @default(cuid())
+  statsAccessRequestId String       @unique
+  athleteId            String
+  associateId          String
+  status               AccessStatus @default(GRANTED)
+  expiresAt            DateTime? // Optional expiration
+
+  statsAccessRequest StatsAccessRequest @relation(fields: [statsAccessRequestId], references: [id], onDelete: Cascade)
+  athlete            Athlete            @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  associate          AssociateProfile   @relation(fields: [associateId], references: [id], onDelete: Cascade)
+
+  // Related stats update (when guide submits changes)
+  statsUpdate StatsUpdate?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteId])
+  @@index([associateId])
+  @@map("stats_access_permissions")
+}
+
+// Stats update submitted by guide for user review
+model StatsUpdate {
+  id                      String            @id @default(cuid())
+  statsAccessPermissionId String            @unique
+  athleteId               String
+  associateId             String
+  status                  StatsUpdateStatus @default(PENDING_REVIEW)
+
+  // Updated stats data (JSON for flexibility)
+  updatedStats Json
+  notes        String?
+
+  statsAccessPermission StatsAccessPermission @relation(fields: [statsAccessPermissionId], references: [id], onDelete: Cascade)
+  athlete               Athlete               @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  associate             AssociateProfile      @relation(fields: [associateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([athleteId])
+  @@index([associateId])
+  @@map("stats_updates")
+}
+
+//user Stats
+model Stats {
+  id        String  @id @default(uuid())
+  athlete   Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  athleteId String  @unique
+  height    Float?
+  weight    Float?
+  age       Int?
+  bodyFat   Float?
+
+  bodyMassIndex     Float?
+  injuries          InjuryStat[]         @relation("InjuryStats")
+  strength          StrengthAndPower[]   @relation("StrengthAndPowerRelation")
+  speed             SpeedAndAgility[]    @relation("SpeedAndAgilityRelation")
+  stamina           StaminaAndRecovery[] @relation("StaminaAndRecoveryRelation")
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  // Metadata for tracking updates
+  lastUpdatedBy     String? // guide ID who last updated
+  lastUpdatedAt     DateTime?
+  lastUpdatedByName String? // For display purposes
+  history           StatsHistory[]
+
+  @@index([athleteId, createdAt, updatedAt])
+  @@map("user_stats")
+}
+
+// Individual injury tracking records
+model InjuryStat {
+  id           String    @id @default(uuid())
+  statId       String
+  stats        Stats     @relation("InjuryStats", fields: [statId], references: [id], onDelete: Cascade)
+  type         String
+  bodyPart     String
+  severity     String
+  occurredAt   DateTime
+  recoveryTime Int?
+  recoveredAt  DateTime?
+  status       String    @default("active")
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([statId, createdAt, updatedAt])
+}
+
+// Cardiovascular and recovery metrics
+model StaminaAndRecovery {
+  id                         String @id @default(uuid())
+  statId                     String
+  stats                      Stats  @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
+  vo2Max                     Float
+  flexibility                Json?
+  overallFlexibilityScore    Float?
+  cardiovascularFitnessScore Float?
+  recoveryEfficiencyScore    Float?
+
+  // Anthropometric data
+  anthropometricData Json?
+
+  //updated field names to be more descriptive
+  Beep_Test                           Json?
+  Yo_Yo_Test                          Json?
+  Cooper_Test                         Json?
+  Peak_Heart_Rate                     Json?
+  Resting_Heart_Rate                  Json?
+  Resting_Heart_Rate_Variability      Json?
+  Lactate_Threshold                   Json?
+  Anaerobic_Capacity                  Json?
+  Post_Exercise_Heart_Rate_Recovery   Json?
+  Sit_and_Reach_Test                  Json?
+  Active_Straight_Leg_Raise           Json?
+  Shoulder_External_Internal_Rotation Json?
+  Knee_to_Wall_Test                   Json?
+  recoveryTime                        Float?
+  createdAt                           DateTime @default(now())
+  updatedAt                           DateTime @updatedAt
+
+  @@index([statId, createdAt, updatedAt])
+}
+
+// Speed and agility performance metrics
+model SpeedAndAgility {
+  id                          String @id @default(uuid())
+  statId                      String
+  stats                       Stats  @relation("SpeedAndAgilityRelation", fields: [statId], references: [id], onDelete: Cascade)
+  sprintSpeed                 Float
+  //updated field names to be more descriptive
+  Ten_Meter_Sprint            Json?
+  Fourty_Meter_Dash           Json?
+  Repeated_Sprint_Ability     Json?
+  Five_0_Five_Agility_Test    Json?
+  T_Test                      Json?
+  Illinois_Agility_Test       Json?
+  Visual_Reaction_Speed_Drill Json?
+  Long_Jump                   Json?
+  Reactive_Agility_T_Test     Json?
+  Standing_Long_Jump          Json?
+
+  acceleration Json?
+  agility      Json?
+  reactionTime Json?
+  balance      Json?
+  coordination Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([statId, createdAt, updatedAt])
+}
+
+// Strength and power performance metrics
+model StrengthAndPower {
+  id     String @id @default(uuid())
+  statId String
+  stats  Stats  @relation("StrengthAndPowerRelation", fields: [statId], references: [id], onDelete: Cascade)
+
+  // Test metadata
+  testDate          DateTime? @default(now())
+  athleteBodyWeight Float // kg - needed for calculations
+
+  // ============================================
+  // JUMP TESTS (JSON - stores full test data with attempts)
+  // ============================================
+  Countermovement_Jump Json? // CountermovementJumpTest
+  Loaded_Squat_Jump    Json? // LoadedSquatJumpTest
+  Depth_Jump           Json? // DepthJumpTest
+
+  // ============================================
+  // UPPER BODY POWER TESTS (JSON)
+  // ============================================
+  Ballistic_Bench_Press Json? // BallisticBenchPressTest
+  Push_Up               Json? // PushUpTest
+  Ballistic_Push_Up     Json? // BallisticPushUpTest
+
+  // ============================================
+  // LOWER BODY STRENGTH TESTS (JSON)
+  // ============================================
+  Deadlift_Velocity  Json? // DeadliftVelocityTest
+  Barbell_Hip_Thrust Json? // BarbellHipThrustTest
+
+  // ============================================
+  // UPPER BODY STRENGTH TESTS (JSON)
+  // ============================================
+  Weighted_Pull_up Json? // WeightedPullUpTest
+  Barbell_Row      Json? // BarbellRowTest
+
+  // ============================================
+  // ENDURANCE/STABILITY TESTS (JSON)
+  // ============================================
+  Plank_Hold Json? // PlankHoldTest
+  pullUps    Json? // PullUpsTest (bodyweight)
+
+  // ============================================
+  // LEGACY FIELD (backward compatibility)
+  // ============================================
+  Pushups Int? // Simple count for backward compatibility
+
+  // ============================================
+  // CALCULATED SCORES (0-100 scale)
+  // ============================================
+  muscleMass        Float @default(0)
+  enduranceStrength Float @default(0)
+  explosivePower    Float @default(0)
+
+  // ============================================
+  // METADATA
+  // ============================================
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([statId, createdAt, updatedAt])
+  @@index([testDate])
+  @@map("strength_and_power")
+}
+
+// Complete audit trail of statistics changes
+model StatsHistory {
+  id      String @id @default(cuid())
+  StatsId String
+
+  stats Stats @relation(fields: [StatsId], references: [id], onDelete: Cascade)
+
+  // What was changed
+  oldValues Json[]
+  newValues Json[]
+
+  // Who made the change
+  updatedBy     String // guide ID
+  updatedByName String // guide name for display
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([StatsId, createdAt, updatedAt])
+  @@map("stats_history")
 }
 
 // ============================================
 // ASSOCIATE/GUIDE/MODERATOR PROFILE
 // ============================================
 model AssociateProfile {
-  id                 String      @id @default(cuid())
-  athleteId          String      @unique
-  athlete            Athlete     @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  athleteId String  @unique
+  athlete   Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   // Professional Information
-  workEmail          String      @unique
-  resumeUrl          String      // Cloudinary or storage URL
-  primaryExpertise   Sport       // Primary sport expertise
-  secondaryExpertise Sport[]     // List of secondary sports
+  workEmail          String  @unique
+  resumeUrl          String // Cloudinary or storage URL
+  primaryExpertise   Sport // Primary sport expertise
+  secondaryExpertise Sport[] // List of secondary sports
   yearsOfExperience  Int
 
   // Location (can differ from athlete's personal address)
-  workCountry        String
-  workState          String
-  workCity           String
-  workLatitude       Float
-  workLongitude      Float
+  workCountry   String
+  workState     String
+  workCity      String
+  workLatitude  Float
+  workLongitude Float
 
   // Status
-  isActive           Boolean     @default(true)
-  verifiedAt         DateTime?   // When admin approved
+  isActive   Boolean   @default(true)
+  verifiedAt DateTime? // When admin approved
 
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  // Relations
+  evaluationRequests     PhysicalEvaluationRequest[]
+  statsAccessRequests    StatsAccessRequest[]
+  statsAccessPermissions StatsAccessPermission[]
+  statsUpdates           StatsUpdate[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([athleteId])
   @@index([primaryExpertise])
@@ -97,13 +379,36 @@ model AssociateProfile {
   @@index([workCountry, workState, workCity])
 }
 
+// Initial evaluation request from athlete to guide
+model PhysicalEvaluationRequest {
+  id                   String           @id @default(cuid())
+  athleteId            String
+  associateId          String
+  status               RequestStatus    @default(PENDING)
+  message              String? // Optional message from athlete
+  MessageFromAssociate String?
+  OTP                  Int?             @unique
+  location             String?
+  athlete              Athlete          @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  associate            AssociateProfile @relation(fields: [associateId], references: [id], onDelete: Cascade)
+  scheduledDate        DateTime?
+  scheduledTime        String?
+  equipment            String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([OTP, associateId, athleteId])
+  @@map("physical_evaluation_requests")
+}
+
 // ============================================
 // ASSOCIATE APPLICATION WORKFLOW
 // ============================================
 model AssociateApplication {
-  id                 String              @id @default(cuid())
-  athleteId          String              @unique
-  athlete            Athlete             @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  athleteId String  @unique
+  athlete   Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   // Application Details
   workEmail          String
@@ -113,119 +418,119 @@ model AssociateApplication {
   yearsOfExperience  Int
 
   // Location
-  workCountry        String
-  workState          String
-  workCity           String
-  workLatitude       Float
-  workLongitude      Float
+  workCountry   String
+  workState     String
+  workCity      String
+  workLatitude  Float
+  workLongitude Float
 
   // Cover Letter / Motivation
-  coverLetter        String?
+  coverLetter String?
 
   // Application Status
-  status             ApplicationStatus   @default(PENDING)
+  status ApplicationStatus @default(PENDING)
 
   // Admin Review
-  reviewedById       String?
-  reviewedBy         Athlete?            @relation("AdminReviewer", fields: [reviewedById], references: [id])
-  reviewedAt         DateTime?
-  reviewNotes        String?
-  rejectionReason    String?
+  reviewedById    String?
+  reviewedBy      Athlete?  @relation("AdminReviewer", fields: [reviewedById], references: [id])
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  rejectionReason String?
 
   // Add this field
-  canReapplyAfter    DateTime?           // When athlete can reapply after rejection
+  canReapplyAfter DateTime? // When athlete can reapply after rejection
 
   // Timestamps
-  submittedAt        DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([athleteId])
   @@index([status])
   @@index([reviewedById])
   @@index([submittedAt])
-  @@index([canReapplyAfter])  // Add index for efficient queries
+  @@index([canReapplyAfter]) // Add index for efficient queries
 }
 
 // ============================================
 // NOTIFICATION SYSTEM (POLYMORPHIC DESIGN)
 // ============================================
+// System-wide notification management
 model Notification {
-  id              String          @id @default(cuid())
+  id        String           @id @default(uuid())
+  athleteId String // Changed from Int to String to match User.id
+  athlete   Athlete          @relation("AthleteNotifications", fields: [athleteId], references: [id])
+  actorId   String? // Changed from Int to String to match User.id
+  actor     Athlete?         @relation("NotificationActor", fields: [actorId], references: [id])
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false) // Removed duplicate 'read' field
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
-  // Recipient
-  recipientId     String
-  recipient       Athlete         @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  @@index([athleteId, isRead])
+}
 
-  // Sender (nullable for system notifications)
-  senderId        String?
-  sender          Athlete?        @relation("NotificationSender", fields: [senderId], references: [id])
-
-  // Notification Content
-  type            NotificationType
-  title           String
-  message         String
-
-  // Polymorphic Reference (for linking to related entities)
-  entityType      String?         // e.g., "AssociateApplication", "Post", "Message"
-  entityId        String?         // ID of the related entity
-
-  // Metadata (JSON for extensibility)
-  metadata        Json?           // Store additional data specific to notification type
-
-  // Status
-  isRead          Boolean         @default(false)
-  readAt          DateTime?
-
-  // Action URL (deep link)
-  actionUrl       String?
-
-  createdAt       DateTime        @default(now())
-  expiresAt       DateTime?       // Optional: for time-sensitive notifications
-
-  @@index([recipientId, isRead])
-  @@index([recipientId, createdAt])
-  @@index([type])
-  @@index([entityType, entityId])
+// Notification categories
+enum NotificationType {
+  STAT_UPDATE_REQUEST
+  STAT_UPDATE_APPROVED
+  APPLICATION_SUBMITTED
+  APPLICATION_APPROVED
+  APPLICATION_REJECTED
+  APPLICATION_UNDER_REVIEW
+  SYSTEM_ANNOUNCEMENT
+  ACCOUNT_UPDATE
+  SECURITY_ALERT
+  NEW_FOLLOWER
+  NEW_MESSAGE
+  ROLE_UPDATED
+  STAT_UPDATE_DENIED
+  JOIN_REQUEST
+  TEAM_INVITE
+  TEAM_EXPIRING
+  MEMBER_JOINED
+  MEMBER_LEFT
+  ROLE_CHANGED
+  MESSAGE
+  MENTION
+  STAT_UPDATE_PERMISSION
+  FOLLOW
 }
 
 // ============================================
 // FRIEND SYSTEM
 // ============================================
-model FriendRequest {
-  id          String              @id @default(cuid())
-  senderId    String
-  sender      Athlete             @relation("FriendRequestSender", fields: [senderId], references: [id])
-  receiverId  String
-  receiver    Athlete             @relation("FriendRequestReceiver", fields: [receiverId], references: [id])
-  status      FriendRequestStatus @default(PENDING)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+model Follow {
+  id          String   @id @default(cuid())
+  follower    Athlete  @relation("AthleteFollowers", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   Athlete  @relation("AthleteFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+  createdAt   DateTime @default(now())
 
-  @@unique([senderId, receiverId])
-  @@index([receiverId, status])
+  @@unique([followerId, followingId])
+  @@index([followingId, followerId])
 }
 
-model Friendship {
-  id        String   @id @default(cuid())
-  userAId   String
-  userBId   String
-  userA     Athlete  @relation("FriendshipUserA", fields: [userAId], references: [id])
-  userB     Athlete  @relation("FriendshipUserB", fields: [userBId], references: [id])
-  createdAt DateTime @default(now())
-
-  @@unique([userAId, userBId])
-  @@index([userAId])
-  @@index([userBId])
+model AthleteCounters {
+  athleteId      String   @id
+  athlete        Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  followersCount Int      @default(0)
+  followingCount Int      @default(0)
+  postsCount     Int      @default(0)
+  updatedAt      DateTime @updatedAt
 }
 
 // ============================================
 // MESSAGING SYSTEM
 // ============================================
 model Conversation {
-  id           String       @id @default(cuid())
-  participants Athlete[]    @relation("ConversationParticipants") // Implicit many-to-many, do not add references
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id           String    @id @default(cuid())
+  participants Athlete[] @relation("ConversationParticipants")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   messages     Message[]
 
   @@index([createdAt])
@@ -239,20 +544,37 @@ model Message {
   sender         Athlete      @relation("MessagesSent", fields: [senderId], references: [id])
   content        String
   createdAt      DateTime     @default(now())
-imageUrl String?
+  imageUrl       String?
+
   @@index([conversationId])
   @@index([senderId])
 }
-model match{
-id             String       @id @default(cuid())
-matchTitle       String?
-wins            Int?
-losses          Int?
+
+model match {
+  id         String  @id @default(cuid())
+  matchTitle String?
+  wins       Int?
+  losses     Int?
 }
 
 // ============================================
 // ENUMS
 // ============================================
+
+// Access permission status
+enum AccessStatus {
+  REQUESTED
+  GRANTED
+  EXPIRED
+  REVOKED
+}
+
+// Stats update approval status
+enum StatsUpdateStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  REJECTED
+}
 
 enum FriendRequestStatus {
   PENDING
@@ -262,7 +584,7 @@ enum FriendRequestStatus {
 
 enum Role {
   ATHLETE
-  ASSOCIATE     // Guide/Moderator
+  ASSOCIATE // Guide/Moderator
   ADMIN
 }
 
@@ -272,27 +594,6 @@ enum ApplicationStatus {
   APPROVED
   REJECTED
   WITHDRAWN
-}
-
-enum NotificationType {
-  APPLICATION_SUBMITTED
-  APPLICATION_APPROVED
-  APPLICATION_REJECTED
-  APPLICATION_UNDER_REVIEW
-  SYSTEM_ANNOUNCEMENT
-  ACCOUNT_UPDATE
-  SECURITY_ALERT
-  NEW_FOLLOWER
-  NEW_MESSAGE
-  POST_LIKED
-  POST_COMMENTED
-  MENTION
-  GUIDE_ASSIGNED
-  TRAINING_SCHEDULED
-  EVENT_INVITATION
-  ROLE_UPDATED
-  PROFILE_FLAGGED
-  CUSTOM
 }
 
 enum Rank {
@@ -336,4 +637,12 @@ enum Sport {
   CYCLING
   GOLF
   OTHER
+}
+
+// Request status tracking
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
 }

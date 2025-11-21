@@ -112,17 +112,7 @@ export async function claimApplication(applicationId: string) {
       },
     });
 
-    // Create notification
-    await tx.notification.create({
-      data: {
-        recipientId: application.athleteId,
-        type: "APPLICATION_UNDER_REVIEW",
-        title: "Application Under Review",
-        message: "An admin is reviewing your associate application",
-        entityType: "AssociateApplication",
-        entityId: applicationId,
-      },
-    });
+
 
     revalidatePath("/admin/applications");
     return application;
@@ -186,20 +176,6 @@ export async function approveApplication(
       });
     }
 
-    // Create notification
-    await tx.notification.create({
-      data: {
-        recipientId: application.athleteId,
-        type: "APPLICATION_APPROVED",
-        title: "🎉 Application Approved!",
-        message: "Congratulations! You are now an associate on Sparta",
-        entityType: "AssociateProfile",
-        entityId: profile.id,
-        actionUrl: "/associate/profile",
-        metadata: { reviewNotes },
-      },
-    });
-
     revalidatePath("/admin/applications");
     revalidatePath(`/admin/applications/${applicationId}`);
 
@@ -238,21 +214,7 @@ export async function rejectApplication(
       },
     });
 
-    // Create notification
-    await tx.notification.create({
-      data: {
-        recipientId: application.athleteId,
-        type: "APPLICATION_REJECTED",
-        title: "Application Update",
-        message: "Your application was not approved at this time",
-        entityType: "AssociateApplication",
-        entityId: applicationId,
-        metadata: {
-          rejectionReason,
-          canReapplyAfter: canReapplyAfter.toISOString(),
-        },
-      },
-    });
+  
 
     revalidatePath("/admin/applications");
     revalidatePath(`/admin/applications/${applicationId}`);

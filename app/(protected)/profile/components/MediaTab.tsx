@@ -1,48 +1,27 @@
+// components/MediaTab.tsx
+
 "use client";
 
 import React from "react";
+import { MediaTabProps } from "@/types/profile/athlete-profile.types";
 
-interface MediaItem {
-  id: string;
-  type: "image" | "video";
-  url: string;
-  thumbnailUrl?: string;
-  title?: string;
-}
-
-interface MediaGalleryProps {
-  media: MediaItem[];
-}
-
-export default function MediaGallery({ media }: MediaGalleryProps) {
+export default function MediaTab({ media }: MediaTabProps) {
   if (!media.length) {
-    return <p className="text-gray-600">No media uploaded yet.</p>;
+    return <p className="text-center text-gray-500">No media available.</p>;
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-      {media.map(({ id, type, url, thumbnailUrl, title }) => (
-        <div
-          key={id}
-          className="relative rounded overflow-hidden shadow hover:shadow-lg transition-shadow duration-200 cursor-pointer"
-        >
-          {type === "image" ? (
-            <img
-              src={thumbnailUrl ?? url}
-              alt={title ?? "Athlete media"}
-              className="w-full h-48 object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <video controls className="w-full h-48 object-cover">
-              <source src={url} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          )}
-          {title && (
-            <div className="absolute bottom-0 left-0 bg-black bg-opacity-50 text-white px-2 py-1 text-sm w-full truncate">
-              {title}
-            </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+      {media.map(({ id, url, caption }) => (
+        <div key={id} className="rounded-lg overflow-hidden shadow-md">
+          <img
+            src={url}
+            alt={caption ?? "Athlete media"}
+            loading="lazy"
+            className="w-full object-cover aspect-square"
+          />
+          {caption && (
+            <p className="text-center text-sm text-gray-600 mt-1">{caption}</p>
           )}
         </div>
       ))}
