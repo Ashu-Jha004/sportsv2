@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import AboutTab from "./AboutTab";
 import MediaTab from "./MediaTab";
 import MatchTab from "./MatchTab";
-import StatsTab from "./STatsTab";
+import StatsTab from "./StatTab";
 import { Info, Camera, ListChecks, BarChart2 } from "lucide-react";
 
 export default function AthleteBody({
