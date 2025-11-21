@@ -2,7 +2,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, redirect } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { useOnboardingStore } from "@/stores/onboarding/store";
 import type { OnboardingRequestDTO } from "@/lib/validations/onboarding/onboarding.dto";
@@ -21,8 +21,10 @@ async function submitOnboarding(payload: OnboardingRequestDTO) {
     const data = await res.json().catch(() => null);
     throw new Error(data?.error ?? "Failed to submit onboarding.");
   }
-
-  return res.json();
+  if (res.ok) {
+    redirect("/profile");
+  }
+  return null;
 }
 
 export default function OnboardingWizard() {

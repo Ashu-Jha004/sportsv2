@@ -4,6 +4,8 @@ import React from "react";
 import { Menu, Bell, MessageCircle } from "lucide-react";
 import AthleteSearch from "./fetchAthleteSearchResults"; // ✅ correct import
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notifications/components/NotificationBell";
+import { SeedNotificationButton } from "@/components/notifications/components/SeedNotificationButton";
 
 export default function Navbar({
   brandName = "Brand",
@@ -25,9 +27,7 @@ export default function Navbar({
 
           {/* Right side icons */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" className="p-2">
-              <Bell size={16} />
-            </Button>
+            <NotificationBell />
             <Button variant="ghost" className="p-2">
               <MessageCircle size={16} />
             </Button>

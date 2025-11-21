@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowRight, Trophy, Users, Activity } from "lucide-react";
 
 export default function HomePage() {
+  // In browser console (while authenticated)
+
   return (
     <main className="min-h-screen bg-linear-to-b from-white via-blue-50 to-white text-gray-900 flex flex-col">
       {/* HERO SECTION */}
@@ -26,12 +28,12 @@ export default function HomePage() {
             connect, grow, and thrive — all in one performance-driven ecosystem.
           </p>
           <div className="flex justify-center md:justify-start gap-4">
-            <Link href="/sign-up">
+            <Link href="/auth/sign-up">
               <button className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center gap-2 shadow-lg">
                 Get Started <ArrowRight size={18} />
               </button>
             </Link>
-            <Link href="/sign-in">
+            <Link href="/auth/sign-in">
               <button className="border border-gray-300 text-gray-800 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
                 Sign In
               </button>
