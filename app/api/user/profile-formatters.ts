@@ -144,6 +144,7 @@ export function formatProfileSummary(
     primarySport: athlete.primarySport,
     rank: athlete.rank,
     class: athlete.class,
+    state: athlete.state,
     city: athlete.city,
     country: athlete.country,
     followersCount:

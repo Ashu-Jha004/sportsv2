@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import AthleteHeader from "../components/AthleteHeader";
@@ -18,32 +19,32 @@ interface PageProps {
 
 export default function DynamicProfilePage({ params }: PageProps) {
   const { user, isLoaded } = useUser();
-  const [username, setUsername] = useState<string | null>(null);
+
+  // ✅ Unwrap the params Promise once, per Next 16 requirement
+  const { username: routeUsername } = React.use(params);
+
+  // /profile  -> own profile (no username)
+  // /profile/[username] -> public profile
+  const isOwnProfile = routeUsername == null;
+
   const [profileData, setProfileData] = useState<AthleteProfile | null>(null);
   const [statsData, setStatsData] = useState<AthleteStats | null>(null);
   const [mediaData, setMediaData] = useState<MediaItem[]>([]);
   const [matchesData, setMatchesData] = useState<MatchHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const isOwnProfile = !username;
 
   useEffect(() => {
-    params.then((resolvedParams) => {
-      setUsername(resolvedParams.username ?? null);
-    });
-  }, [params]);
+    if (!isLoaded) return;
 
-  useEffect(() => {
     const fetchProfile = async () => {
-      if (!isLoaded) return;
-
       setIsLoading(true);
       setError(null);
 
       try {
         const url = isOwnProfile
-          ? `/api/user/current`
-          : `/api/user/${encodeURIComponent(username!)}`;
+          ? "/api/user/current"
+          : `/api/user/${encodeURIComponent(routeUsername!)}`;
 
         console.log("🔍 STEP 1: Fetching from:", url);
 
@@ -72,7 +73,7 @@ export default function DynamicProfilePage({ params }: PageProps) {
 
           setProfileData(data.data);
 
-          // Mock data for stats, media and matches for demo:
+          // Mock stats/media/matches as before
           setStatsData({
             weight: 75,
             height: 180,
@@ -135,10 +136,10 @@ export default function DynamicProfilePage({ params }: PageProps) {
       }
     };
 
-    if (username !== null || isOwnProfile) {
+    if (isOwnProfile || routeUsername) {
       fetchProfile();
     }
-  }, [username, isOwnProfile, user, isLoaded]);
+  }, [isLoaded, isOwnProfile, routeUsername]);
 
   useEffect(() => {
     console.log("🔍 STEP 4: Rendering with profileData:", {
@@ -151,10 +152,10 @@ export default function DynamicProfilePage({ params }: PageProps) {
     });
   }, [profileData]);
 
-  if (isLoading || username === null) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
       </div>
     );
   }
@@ -180,7 +181,6 @@ export default function DynamicProfilePage({ params }: PageProps) {
     );
   }
 
-  // Step 5: Log before passing to components
   console.log("🔍 STEP 5: About to render components with athlete:", {
     athleteExists: !!profileData,
     athleteKeys: Object.keys(profileData),

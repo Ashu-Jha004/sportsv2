@@ -62,21 +62,31 @@ export type AthleteFullProfile = Prisma.AthleteGetPayload<{
 
 /**
  * Minimal athlete data for lists/search
+ *
+ *
  */
-export type AthleteSummary = Pick<
-  Athlete,
-  | "id"
-  | "username"
-  | "firstName"
-  | "lastName"
-  | "profileImage"
-  | "primarySport"
-  | "rank"
-  | "class"
-  | "city"
-  | "country"
->;
 
+export interface AthleteSummary {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  rank?: string;
+  class?: string;
+  primarySport: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  profileImage: string | null | undefined;
+}
+
+export interface AthleteSearchResponse {
+  athletes: AthleteSummary[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 // =============================================================================
 // PROFILE RESPONSE TYPES
 // =============================================================================
@@ -182,6 +192,7 @@ export interface ProfileSummaryResponse {
   class: Class;
   city: string;
   country: string;
+  state: string | undefined | null;
   followersCount: number;
 }
 
@@ -276,7 +287,7 @@ export interface ProfileUpdateResult {
 export interface ProfileExistsResult {
   hasProfile: boolean;
   needsOnboarding: boolean;
-  athlete: AthleteSummary | null;
+  athlete: AthleteSummary | null | undefined;
 }
 
 /**
@@ -444,9 +455,6 @@ export function isAdmin(athlete: Pick<Athlete, "isAdmin">): boolean {
 /**
  * Check if user has specific role
  */
-export function hasRole(
-  athlete: Pick<Athlete, "roles">,
-  role: Role
-): boolean {
+export function hasRole(athlete: Pick<Athlete, "roles">, role: Role): boolean {
   return athlete.roles.includes(role);
 }

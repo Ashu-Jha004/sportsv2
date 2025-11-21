@@ -154,10 +154,10 @@ export default function AthleteHeader({
 
           {/* Rank & Class */}
           <div className="flex items-center space-x-3 mt-3">
-            <Badge className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 py-1 rounded-full">
+            <Badge className="flex items-center gap-1 bg-linear-to-r from-purple-600 to-indigo-600 text-white px-3 py-1 rounded-full">
               <Trophy size={16} /> {athlete.rank}
             </Badge>
-            <Badge className="flex items-center gap-1 bg-gradient-to-r from-green-600 to-teal-600 text-white px-3 py-1 rounded-full">
+            <Badge className="flex items-center gap-1 bg-linear-to-r from-green-600 to-teal-600 text-white px-3 py-1 rounded-full">
               <Star size={16} /> Class {athlete.class}
             </Badge>
           </div>
