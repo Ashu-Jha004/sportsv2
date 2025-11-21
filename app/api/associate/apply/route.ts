@@ -88,30 +88,6 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Create notifications for all admins
-      const admins = await tx.athlete.findMany({
-        where: { isAdmin: true },
-      });
-
-      for (const admin of admins) {
-        await tx.notification.create({
-          data: {
-            recipientId: admin.id,
-            senderId: athlete.id,
-            type: "APPLICATION_SUBMITTED",
-            title: "New Associate Application",
-            message: `${athlete.firstName} ${athlete.lastName} has applied to become an associate`,
-            entityType: "AssociateApplication",
-            entityId: newApp.id,
-            actionUrl: `/admin/applications/${newApp.id}`,
-            metadata: {
-              athleteId: athlete.id,
-              sport: validatedData.primaryExpertise,
-            },
-          },
-        });
-      }
-
       return newApp;
     });
 
