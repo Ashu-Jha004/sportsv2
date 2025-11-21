@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import FeatureCard from "./FeatureCard";
-import { features } from "@/data/mockProfile";
+
 export default function FeaturesGrid() {
   return (
     <section className="py-20 px-4" id="features">
@@ -28,11 +28,7 @@ export default function FeaturesGrid() {
         </motion.div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard key={feature.id} feature={feature} index={index} />
-          ))}
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">features</div>
       </div>
     </section>
   );
