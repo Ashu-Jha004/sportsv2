@@ -13,7 +13,7 @@ const isApiRoute = createRouteMatcher(["/api/:path*"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 // Founder credentials for admin verification
-const FOUNDER_CLERK_ID = "user_35YzK3Uh5s1TG27ZOPN4J78f2hq";
+const FOUNDER_CLERK_ID: any = "user_35jot94FIsXLkQ9NWc5QBWre8oS";
 const FOUNDER_EMAIL = "ashujha009322@gmail.com";
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
