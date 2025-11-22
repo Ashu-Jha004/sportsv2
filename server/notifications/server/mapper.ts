@@ -1,8 +1,11 @@
 // src/features/notifications/server/mapper.ts
 import type { Notification, Athlete } from "@prisma/client";
-import type { NotificationActorDto, NotificationDto } from "../../../types/notifications/types";
+import type {
+  NotificationActorDto,
+  NotificationDto,
+} from "../../../types/notifications/types";
 
-function mapActorToDto(actor: Athlete | null): NotificationActorDto | null {
+function mapActorToDto(actor: Athlete | null): any | null {
   if (!actor) return null;
 
   return {
@@ -16,7 +19,7 @@ function mapActorToDto(actor: Athlete | null): NotificationActorDto | null {
 
 // Build deep link based on type + data payload
 function buildNotificationLink(
-  notification: Notification & { data: any }
+  notification: any & { data: any }
 ): string | null {
   const { type, data } = notification;
 
@@ -79,8 +82,8 @@ function buildNotificationLink(
 }
 
 export function mapNotificationToDto(
-  notification: Notification & { actor: Athlete | null }
-): NotificationDto {
+  notification: any & { actor: Athlete | null }
+): any {
   const link = buildNotificationLink(notification as any);
 
   return {
