@@ -8,12 +8,7 @@
  * Aligned with Prisma Athlete schema
  */
 
-import type {
-  AthleteWithCounts,
-  OwnProfileResponse,
-  PublicProfileResponse,
-  ProfileSummaryResponse,
-} from "./athlete.types";
+import type { AthleteWithCounts, OwnProfileResponse } from "./athlete.types";
 
 // =============================================================================
 // OWN PROFILE FORMATTER (Full Access)
@@ -28,7 +23,7 @@ export function formatOwnProfile(
 ): OwnProfileResponse {
   return {
     // Identity
-    id: athlete.id,
+    clerkUserId: athlete.clerkUserId,
     username: athlete.username,
     firstName: athlete.firstName,
     lastName: athlete.lastName,
@@ -51,7 +46,7 @@ export function formatOwnProfile(
 
     // PRIVATE information (only for own profile)
     email: athlete.email,
-    dateOfBirth: athlete.dateOfBirth.toISOString(),
+    dateOfBirth: athlete.dateOfBirth,
     gender: athlete.gender,
 
     // Social counts
@@ -82,12 +77,10 @@ export function formatOwnProfile(
  * Format public profile for other users viewing
  * Excludes private information (email, DOB, exact coordinates)
  */
-export function formatPublicProfile(
-  athlete: AthleteWithCounts
-): PublicProfileResponse {
+export function formatPublicProfile(athlete: any) {
   return {
     // Identity
-    id: athlete.id,
+    clerkUserId: athlete.clerkUserId,
     username: athlete.username,
     firstName: athlete.firstName,
     lastName: athlete.lastName,
@@ -101,12 +94,16 @@ export function formatPublicProfile(
     class: athlete.class,
     roles: athlete.roles,
 
-    // Location (city-level only for privacy - NO exact coordinates)
+    // Location (full access including exact coordinates)
     city: athlete.city,
     state: athlete.state,
     country: athlete.country,
+    latitude: athlete.latitude,
+    longitude: athlete.longitude,
 
-    // Public info only
+    // PRIVATE information (only for own profile)
+    email: athlete.email,
+    dateOfBirth: athlete.dateOfBirth,
     gender: athlete.gender,
 
     // Social counts
@@ -116,11 +113,16 @@ export function formatPublicProfile(
       athlete.counters?.followingCount ?? athlete._count.following,
     postsCount: athlete.counters?.postsCount ?? 0,
 
-    // Metadata (limited)
+    // Metadata
     createdAt: athlete.createdAt.toISOString(),
+    updatedAt: athlete.updatedAt.toISOString(),
+
+    // Status flags
+    onboardingComplete: athlete.onboardingComplete,
+    isAdmin: athlete.isAdmin,
 
     // Context
-    isOwnProfile: false,
+    isOwnProfile: true,
   };
 }
 
@@ -132,23 +134,51 @@ export function formatPublicProfile(
  * Format minimal profile summary for lists, search results, suggestions
  * Only essential information for display cards
  */
-export function formatProfileSummary(
-  athlete: AthleteWithCounts
-): ProfileSummaryResponse {
+export function formatProfileSummary(athlete: any) {
   return {
-    id: athlete.id,
+    clerkUserId: athlete.clerkUserId,
     username: athlete.username,
     firstName: athlete.firstName,
     lastName: athlete.lastName,
     profileImage: athlete.profileImage,
+    bio: athlete.bio,
+
+    // Athletic info
     primarySport: athlete.primarySport,
+    secondarySport: athlete.secondarySport,
     rank: athlete.rank,
     class: athlete.class,
-    state: athlete.state,
+    roles: athlete.roles,
+
+    // Location (full access including exact coordinates)
     city: athlete.city,
+    state: athlete.state,
     country: athlete.country,
+    latitude: athlete.latitude,
+    longitude: athlete.longitude,
+
+    // PRIVATE information (only for own profile)
+    email: athlete.email,
+    dateOfBirth: athlete.dateOfBirth,
+    gender: athlete.gender,
+
+    // Social counts
     followersCount:
-      athlete.counters?.followersCount ?? athlete._count?.followers ?? 0,
+      athlete.counters?.followersCount ?? athlete._count.followers,
+    followingCount:
+      athlete.counters?.followingCount ?? athlete._count.following,
+    postsCount: athlete.counters?.postsCount ?? 0,
+
+    // Metadata
+    createdAt: athlete.createdAt.toISOString(),
+    updatedAt: athlete.updatedAt.toISOString(),
+
+    // Status flags
+    onboardingComplete: athlete.onboardingComplete,
+    isAdmin: athlete.isAdmin,
+
+    // Context
+    isOwnProfile: true,
   };
 }
 
@@ -189,6 +219,8 @@ export function formatLocation(athlete: {
   city: string;
   state?: string;
   country: string;
+  longitude: number;
+  latitude: number;
 }): string {
   const parts = [athlete.city];
 
@@ -205,17 +237,20 @@ export function formatLocation(athlete: {
  * Calculate profile completion percentage
  */
 export function getProfileCompletionPercentage(athlete: {
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
+  username: string | undefined | null;
+  firstName: string | undefined | null;
+  lastName: string | undefined | null;
+  email: string | undefined | null;
   dateOfBirth: Date | null;
-  gender: string;
-  bio: string | null;
-  profileImage: string | null;
-  primarySport: string;
-  city: string;
-  country: string;
+  gender: string | undefined | null;
+  bio: string | null | undefined;
+  profileImage: string | null | undefined;
+  primarySport: string | undefined | null;
+  city: string | undefined | null;
+  country: string | undefined | null;
+  state: string | undefined | null;
+  longitude: number | undefined | null;
+  latitude: number | undefined | null;
 }): number {
   const requiredFields = [
     "username",
@@ -229,6 +264,9 @@ export function getProfileCompletionPercentage(athlete: {
     "primarySport",
     "city",
     "country",
+    "state",
+    "longitude",
+    "latitude",
   ] as const;
 
   const completedFields = requiredFields.filter((field) => {
@@ -252,13 +290,20 @@ export function getProfileCompletionPercentage(athlete: {
  * Check if profile has minimum required information
  */
 export function hasMinimumProfileInfo(athlete: {
-  username: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  primarySport: string;
-  city: string;
-  country: string;
+  username: string | undefined | null;
+  firstName: string | undefined | null;
+  lastName: string | undefined | null;
+  email: string | undefined | null;
+  dateOfBirth: Date | null;
+  gender: string | undefined | null;
+  bio: string | null | undefined;
+  profileImage: string | null | undefined;
+  primarySport: string | undefined | null;
+  city: string | undefined | null;
+  country: string | undefined | null;
+  state: string | undefined | null;
+  longitude: number | undefined | null;
+  latitude: number | undefined | null;
 }): boolean {
   const minimumFields = [
     athlete.username,
@@ -268,11 +313,16 @@ export function hasMinimumProfileInfo(athlete: {
     athlete.primarySport,
     athlete.city,
     athlete.country,
+    athlete.latitude,
+    athlete.longitude,
+    athlete.state,
+    athlete.dateOfBirth,
+    athlete.gender,
+    athlete.profileImage,
+    athlete.bio,
   ];
 
-  return minimumFields.every(
-    (field) => field !== null && field !== undefined && field.trim() !== ""
-  );
+  return minimumFields.every((field) => field !== null && field !== undefined);
 }
 
 /**
@@ -328,18 +378,14 @@ export function formatFuzzyCoordinates(
 /**
  * Format multiple athletes as public profiles
  */
-export function formatPublicProfiles(
-  athletes: AthleteWithCounts[]
-): PublicProfileResponse[] {
+export function formatPublicProfiles(athletes: any) {
   return athletes.map(formatPublicProfile);
 }
 
 /**
  * Format multiple athletes as summaries
  */
-export function formatProfileSummaries(
-  athletes: AthleteWithCounts[]
-): ProfileSummaryResponse[] {
+export function formatProfileSummaries(athletes: any) {
   return athletes.map(formatProfileSummary);
 }
 
@@ -351,10 +397,7 @@ export function formatProfileSummaries(
  * Automatically format profile based on ownership
  * Returns own profile format if viewing own profile, public format otherwise
  */
-export function formatProfile(
-  athlete: AthleteWithCounts,
-  viewerAthleteId?: string
-): OwnProfileResponse | PublicProfileResponse {
+export function formatProfile(athlete: any, viewerAthleteId: any) {
   const isOwnProfile = viewerAthleteId === athlete.id;
 
   if (isOwnProfile) {

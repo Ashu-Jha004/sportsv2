@@ -67,7 +67,7 @@ export async function GET(
 
     // 3. Get athlete profile
     const profile = await getAthleteByUsernameService(username);
-    console.log(`✅ Profile fetched: ${profile.id}`, profile);
+    console.log(`✅ Profile fetched: ${profile.clerkUserId}`, profile);
     // 4. Return public profile data
     return createApiResponse(profile);
   } catch (error) {

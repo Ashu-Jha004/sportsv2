@@ -67,17 +67,48 @@ export type AthleteFullProfile = Prisma.AthleteGetPayload<{
  */
 
 export interface AthleteSummary {
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  rank?: string;
-  class?: string;
-  primarySport: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  profileImage: string | null | undefined;
+  // Identity
+  clerkUserId: string;
+  username: string | undefined | null;
+  firstName: string | undefined | null;
+  lastName: string | undefined | null;
+  profileImage: string | null;
+  bio: string | null | undefined;
+
+  // Athletic info
+  primarySport: Sport | undefined | null;
+  secondarySport: Sport | null | undefined;
+  rank: Rank | undefined | null;
+  class: Class | undefined | null;
+  roles: Role[] | undefined | null;
+
+  // Location (full access including coordinates)
+  city: string | undefined | null;
+  state: string | undefined | null;
+  country: string | undefined | null;
+  latitude: number | undefined | null;
+  longitude: number | undefined | null;
+
+  // Private info (only for own profile)
+  email: string | undefined | null;
+  dateOfBirth: string | undefined | null;
+  gender: Gender | undefined | null;
+
+  // Social counts
+  followersCount: number | undefined | null;
+  followingCount: number | undefined | null;
+  postsCount: number | undefined | null;
+
+  // Metadata
+  createdAt: string | undefined | null;
+  updatedAt: string | undefined | null;
+
+  // Status
+  onboardingComplete: boolean | undefined | null;
+  isAdmin: boolean | undefined | null;
+
+  // Context
+  isOwnProfile: true | undefined | null;
 }
 
 export interface AthleteSearchResponse {
@@ -96,38 +127,47 @@ export interface AthleteSearchResponse {
  */
 export interface PublicProfileResponse {
   // Identity
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
+  clerkUserId: string | undefined | null;
+  username: string | undefined | null;
+  firstName: string | undefined | null;
+  lastName: string | undefined | null;
   profileImage: string | null;
-  bio: string | null;
+  bio: string | null | undefined;
 
   // Athletic info
-  primarySport: Sport;
-  secondarySport: Sport | null;
-  rank: Rank;
-  class: Class;
-  roles: Role[];
+  primarySport: Sport | undefined | null;
+  secondarySport: Sport | null | undefined;
+  rank: Rank | undefined | null;
+  class: Class | undefined | null;
+  roles: Role[] | undefined | null;
 
-  // Location (city-level only for privacy)
-  city: string;
-  state: string;
-  country: string;
+  // Location (full access including coordinates)
+  city: string | undefined | null;
+  state: string | undefined | null;
+  country: string | undefined | null;
+  latitude: number | undefined | null;
+  longitude: number | undefined | null;
 
-  // Public info
-  gender: Gender;
+  // Private info (only for own profile)
+  email: string | undefined | null;
+  dateOfBirth: string | undefined | null;
+  gender: Gender | undefined | null;
 
   // Social counts
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
+  followersCount: number | undefined | null;
+  followingCount: number | undefined | null;
+  postsCount: number | undefined | null;
 
   // Metadata
-  createdAt: string;
+  createdAt: string | undefined | null;
+  updatedAt: string | undefined | null;
+
+  // Status
+  onboardingComplete: boolean | undefined | null;
+  isAdmin: boolean | undefined | null;
 
   // Context
-  isOwnProfile: false;
+  isOwnProfile: true | undefined | null;
 }
 
 /**
@@ -135,65 +175,74 @@ export interface PublicProfileResponse {
  */
 export interface OwnProfileResponse {
   // Identity
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
+  clerkUserId: string;
+  username: string | undefined | null;
+  firstName: string | undefined | null;
+  lastName: string | undefined | null;
   profileImage: string | null;
-  bio: string | null;
+  bio: string | null | undefined;
 
   // Athletic info
-  primarySport: Sport;
-  secondarySport: Sport | null;
-  rank: Rank;
-  class: Class;
-  roles: Role[];
+  primarySport: Sport | undefined | null;
+  secondarySport: Sport | null | undefined;
+  rank: Rank | undefined | null;
+  class: Class | undefined | null;
+  roles: Role[] | undefined | null;
 
   // Location (full access including coordinates)
-  city: string;
-  state: string;
-  country: string;
-  latitude: number;
-  longitude: number;
+  city: string | undefined | null;
+  state: string | undefined | null;
+  country: string | undefined | null;
+  latitude: number | undefined | null;
+  longitude: number | undefined | null;
 
   // Private info (only for own profile)
-  email: string;
-  dateOfBirth: string;
-  gender: Gender;
+  email: string | undefined | null;
+  dateOfBirth: string | undefined | null | Date;
+  gender: Gender | undefined | null;
 
   // Social counts
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
+  followersCount: number | undefined | null;
+  followingCount: number | undefined | null;
+  postsCount: number | undefined | null;
 
   // Metadata
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string | undefined | null;
+  updatedAt: string | undefined | null;
 
   // Status
-  onboardingComplete: boolean;
-  isAdmin: boolean;
+  onboardingComplete: boolean | undefined | null;
+  isAdmin: boolean | undefined | null;
 
   // Context
-  isOwnProfile: true;
+  isOwnProfile: true | undefined | null;
 }
 
 /**
  * Profile summary for search/lists
  */
 export interface ProfileSummaryResponse {
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  profileImage: string | null;
-  primarySport: Sport;
-  rank: Rank;
-  class: Class;
-  city: string;
-  country: string;
+  clerkUserId: string | undefined | null;
+  username: string | undefined | null;
+  firstName: string | undefined | null;
+  lastName: string | undefined | null;
+  profileImage: string | undefined | null;
+  primarySport: Sport | undefined | null;
+  rank: Rank | undefined | null;
+  class: Class | undefined | null;
+  city: string | undefined | null;
+  country: string | undefined | null;
   state: string | undefined | null;
-  followersCount: number;
+  followersCount: number | undefined | null;
+  followingCount: number | undefined | null;
+  longitude: number | undefined | null;
+  latitude: number | undefined | null;
+  gender: string | undefined | null | Gender;
+  dateOfBirth: number | string | undefined | null;
+  bio: string | undefined | null;
+  createdAt: number | string | undefined | null;
+  updatedAt: number | string | undefined | null;
+  secondarySport: string | undefined | null | Sport;
 }
 
 // =============================================================================
@@ -205,29 +254,27 @@ export interface ProfileSummaryResponse {
  */
 export interface ProfileCreateInput {
   // Identity
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
+  username?: string | undefined | null;
+  firstName?: string | undefined | null;
+  lastName?: string | undefined | null;
 
   // Personal
-  dateOfBirth: string;
-  gender: Gender;
-  bio: string;
+  dateOfBirth?: string | undefined | null;
+  gender?: Gender | undefined | null;
+  bio?: string | undefined | null;
 
   // Image
-  profileImage?: string;
-
+  profileImage?: string | undefined | null;
   // Sports
-  primarySport: Sport;
-  secondarySport?: Sport;
+  primarySport?: Sport | undefined | null;
+  secondarySport?: Sport | undefined | null;
 
   // Location
-  country: string;
-  state: string;
-  city: string;
-  latitude: number;
-  longitude: number;
+  country?: string | undefined | null;
+  state?: string | undefined | null;
+  city?: string | undefined | null;
+  latitude?: number | undefined | null;
+  longitude?: number | undefined | null;
 }
 
 /**
@@ -235,28 +282,27 @@ export interface ProfileCreateInput {
  */
 export interface ProfileUpdateInput {
   // Identity
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username?: string | undefined | null;
+  firstName?: string | undefined | null;
+  lastName?: string | undefined | null;
 
   // Personal
-  dateOfBirth?: string;
-  gender?: Gender;
-  bio?: string;
+  dateOfBirth?: string | undefined | null;
+  gender?: Gender | undefined | null;
+  bio?: string | undefined | null;
 
   // Image
-  profileImage?: string;
-
+  profileImage?: string | undefined | null;
   // Sports
-  primarySport?: Sport;
-  secondarySport?: Sport;
+  primarySport?: Sport | undefined | null;
+  secondarySport?: Sport | undefined | null;
 
   // Location
-  country?: string;
-  state?: string;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
+  country?: string | undefined | null;
+  state?: string | undefined | null;
+  city?: string | undefined | null;
+  latitude?: number | undefined | null;
+  longitude?: number | undefined | null;
 }
 
 // =============================================================================
@@ -267,25 +313,24 @@ export interface ProfileUpdateInput {
  * Result from profile creation service
  */
 export interface ProfileCreateResult {
-  athleteId: string;
-  username: string;
-  message: string;
+  athleteId: string | undefined | null;
+  username: string | undefined | null;
+  message: string | undefined | null;
 }
 
 /**
  * Result from profile update service
  */
 export interface ProfileUpdateResult {
-  athleteId: string;
-  username: string;
-  message: string;
+  athleteId: string | undefined | null;
+  username: string | undefined | null;
+  message: string | undefined | null;
 }
 
 /**
  * Result from profile check
  */
 export interface ProfileExistsResult {
-  hasProfile: boolean;
   needsOnboarding: boolean;
   athlete: AthleteSummary | null | undefined;
 }
@@ -295,7 +340,7 @@ export interface ProfileExistsResult {
  */
 export interface UsernameCheckResult {
   available: boolean;
-  username: string;
+  username: string | undefined | null;
 }
 
 // =============================================================================
@@ -308,11 +353,11 @@ export interface UsernameCheckResult {
 export interface AuthenticatedUser {
   // Clerk data
   clerkUserId: string;
-  clerkEmail: string | undefined;
+  clerkEmail: string | undefined | null;
 
   // Database athlete data
   athleteId: string;
-  username: string;
+  username: string | undefined | null;
   roles: Role[];
   isAdmin: boolean;
   onboardingComplete: boolean;
@@ -321,7 +366,7 @@ export interface AuthenticatedUser {
 /**
  * Optional authentication result
  */
-export type OptionalAuthUser = AuthenticatedUser | null;
+export type OptionalAuthUser = AuthenticatedUser | null | undefined;
 
 // =============================================================================
 // PAGINATION & FILTERING
@@ -376,22 +421,33 @@ export interface AthleteSearchParams extends PaginationParams {
  */
 export type PublicAthleteFields = Pick<
   Athlete,
-  | "id"
-  | "username"
-  | "firstName"
-  | "lastName"
-  | "profileImage"
-  | "bio"
-  | "primarySport"
-  | "secondarySport"
+  | "email"
+  | "dateOfBirth"
+  | "latitude"
+  | "longitude"
+  | "adminGrantedAt"
+  | "adminRole"
+  | "adminGrantedBy"
+  | "isAdmin"
+  | "clerkUserId"
   | "rank"
   | "class"
-  | "roles"
   | "city"
-  | "state"
+  | "bio"
   | "country"
+  | "username"
+  | "id"
+  | "onboardingComplete"
+  | "firstName"
   | "gender"
+  | "lastName"
+  | "primarySport"
+  | "profileImage"
+  | "roles"
+  | "secondarySport"
+  | "state"
   | "createdAt"
+  | "updatedAt"
 >;
 
 /**
@@ -399,7 +455,33 @@ export type PublicAthleteFields = Pick<
  */
 export type PrivateAthleteFields = Pick<
   Athlete,
-  "email" | "dateOfBirth" | "latitude" | "longitude"
+  | "email"
+  | "dateOfBirth"
+  | "latitude"
+  | "longitude"
+  | "adminGrantedAt"
+  | "adminRole"
+  | "adminGrantedBy"
+  | "isAdmin"
+  | "clerkUserId"
+  | "rank"
+  | "class"
+  | "city"
+  | "bio"
+  | "country"
+  | "username"
+  | "id"
+  | "onboardingComplete"
+  | "firstName"
+  | "gender"
+  | "lastName"
+  | "primarySport"
+  | "profileImage"
+  | "roles"
+  | "secondarySport"
+  | "state"
+  | "createdAt"
+  | "updatedAt"
 >;
 
 /**
@@ -426,15 +508,6 @@ export type UpdatableAthleteFields = Pick<
 // =============================================================================
 // TYPE GUARDS
 // =============================================================================
-
-/**
- * Check if profile response is own profile
- */
-export function isOwnProfile(
-  profile: OwnProfileResponse | PublicProfileResponse
-): profile is OwnProfileResponse {
-  return profile.isOwnProfile === true;
-}
 
 /**
  * Check if user has completed onboarding

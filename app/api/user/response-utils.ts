@@ -32,7 +32,7 @@ interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
-  message?: string;
+  message?: string | undefined | null;
   details?: any;
   timestamp: string;
 }
@@ -55,7 +55,7 @@ interface ApiErrorResponse {
 export function createApiResponse<T>(
   data: T,
   status: number = 200,
-  message?: string
+  message?: string | undefined | null
 ): NextResponse<ApiResponse<T>> {
   const response: ApiResponse<T> = {
     success: true,

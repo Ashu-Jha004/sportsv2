@@ -38,13 +38,13 @@ export async function OPTIONS() {
 
 /**
  * Create new athlete profile
- * 
+ *
  * @route POST /api/athlete/profile
  * @access Authenticated (requires Clerk session)
  * @body ProfileCreateInput
- * 
+ *
  * @returns {ProfileCreateResult} Created profile info
- * 
+ *
  * @throws {AuthenticationError} 401 - Not authenticated
  * @throws {ProfileAlreadyExistsError} 409 - Profile already exists
  * @throws {UsernameNotAvailableError} 409 - Username taken
@@ -69,7 +69,6 @@ export async function POST(req: NextRequest) {
 
     // 4. Return success response
     return createCreatedResponse(result, "Profile created successfully");
-
   } catch (error) {
     console.error("❌ Profile creation failed:", error);
     return handleApiError(error, "profile creation");
@@ -82,12 +81,12 @@ export async function POST(req: NextRequest) {
 
 /**
  * Get current user's own profile (full access)
- * 
+ *
  * @route GET /api/athlete/profile
  * @access Authenticated
- * 
+ *
  * @returns {OwnProfileResponse} Full profile with private data
- * 
+ *
  * @throws {AuthenticationError} 401 - Not authenticated
  * @throws {AthleteNotFoundError} 404 - Profile not found
  */
@@ -101,11 +100,10 @@ export async function GET() {
 
     // 2. Get own profile
     const profile = await getOwnProfileService(user.clerkUserId);
-    console.log(`✅ Profile fetched: ${profile.id}`);
+    console.log(`✅ Profile fetched: ${profile.clerkUserId}`);
 
     // 3. Return profile data
     return createApiResponse(profile);
-
   } catch (error) {
     console.error("❌ Profile fetch failed:", error);
     return handleApiError(error, "profile fetch");

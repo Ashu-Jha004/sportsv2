@@ -231,7 +231,6 @@ export const getAuthenticatedAthlete = cache(async () => {
     include: {
       counters: true,
       stats: true,
-      associateProfile: true,
       _count: {
         select: {
           followers: true,

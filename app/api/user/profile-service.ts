@@ -236,13 +236,11 @@ export async function getOwnProfileService(
  *
  * @throws {AthleteNotFoundError} If athlete not found
  */
-export async function getAthleteByIdService(
-  athleteId: string
-): Promise<PublicProfileResponse> {
+export async function getAthleteByIdService(athleteId: any) {
   console.log("📋 Fetching athlete by ID:", athleteId);
 
   const athlete = await prisma.athlete.findUnique({
-    where: { id: athleteId },
+    where: { clerkUserId: athleteId },
     include: {
       counters: true,
       _count: {
@@ -268,8 +266,8 @@ export async function getAthleteByIdService(
  * @throws {AthleteNotFoundError} If athlete not found
  */
 export async function getAthleteByUsernameService(
-  username: string
-): Promise<PublicProfileResponse> {
+  username: any
+) {
   console.log("📋 Fetching athlete by username:", username);
 
   const athlete = await prisma.athlete.findUnique({
@@ -440,9 +438,7 @@ export async function deleteProfileService(
 /**
  * Check if profile exists for Clerk user
  */
-export async function checkProfileExistsService(
-  clerkUserId: string
-): Promise<ProfileExistsResult> {
+export async function checkProfileExistsService(clerkUserId: string) {
   const athlete = await prisma.athlete.findUnique({
     where: { clerkUserId },
     select: {
@@ -478,7 +474,7 @@ export async function checkProfileExistsService(
 export async function checkUsernameAvailability(
   username: string,
   excludeClerkUserId?: string
-): Promise<UsernameCheckResult> {
+) {
   const athlete = await prisma.athlete.findUnique({
     where: { username },
     select: { clerkUserId: true },
