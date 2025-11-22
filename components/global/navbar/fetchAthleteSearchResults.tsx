@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import type { AthleteSummary } from "@/app/api/user/athlete.types";
 
 async function fetchAthleteSearchResults(
-  query: string
+  query: any
 ): Promise<AthleteSummary[]> {
   if (!query.trim()) return [];
 
@@ -71,7 +71,7 @@ export default function AthleteSearch() {
     setInputValue(e.target.value);
   }
 
-  function handleSelect(username: string) {
+  function handleSelect(username: any) {
     redirect(`/profile/${username}`);
     setInputValue("");
     clearSearchResults();
