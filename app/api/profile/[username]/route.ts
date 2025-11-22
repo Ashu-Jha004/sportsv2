@@ -99,7 +99,7 @@ export async function GET(
         lastName: athlete.lastName,
         fullName: `${athlete.firstName} ${athlete.lastName}`,
         profileImage: athlete.profileImage,
-        dateOfBirth: athlete.dateOfBirth.toISOString(),
+        dateOfBirth: athlete?.dateOfBirth,
         // Show only year to others
         gender: athlete.gender,
         bio: athlete.bio,
@@ -108,16 +108,11 @@ export async function GET(
         rank: athlete.rank,
         class: athlete.class,
         roles: athlete.roles,
-        location: {
-          country: athlete.country,
-          state: athlete.state,
-          city: athlete.city,
-          coordinates: {
-            latitude: athlete.latitude,
-            longitude: athlete.longitude,
-          },
-          // Hide exact coordinates from others
-        },
+        country: athlete.country,
+        state: athlete.state,
+        city: athlete.city,
+        latitude: athlete.latitude,
+        longitude: athlete.longitude,
         createdAt: athlete.createdAt.toISOString(),
         updatedAt: athlete.updatedAt.toISOString(),
       },
