@@ -171,12 +171,13 @@ export async function PATCH(request: NextRequest) {
       athlete: {
         id: updatedAthlete.id,
         username: updatedAthlete.username,
-        email: updatedAthlete.email,
+        email: updatedAthlete.email, // Show email only if own profile
         firstName: updatedAthlete.firstName,
         lastName: updatedAthlete.lastName,
         fullName: `${updatedAthlete.firstName} ${updatedAthlete.lastName}`,
         profileImage: updatedAthlete.profileImage,
-        dateOfBirth: updatedAthlete.dateOfBirth.toISOString(),
+        dateOfBirth: updatedAthlete?.dateOfBirth,
+        // Show only year to others
         gender: updatedAthlete.gender,
         bio: updatedAthlete.bio,
         primarySport: updatedAthlete.primarySport,
@@ -184,17 +185,13 @@ export async function PATCH(request: NextRequest) {
         rank: updatedAthlete.rank,
         class: updatedAthlete.class,
         roles: updatedAthlete.roles,
-        location: {
-          country: updatedAthlete.country,
-          state: updatedAthlete.state,
-          city: updatedAthlete.city,
-          coordinates: {
-            latitude: updatedAthlete.latitude,
-            longitude: updatedAthlete.longitude,
-          },
-        },
-        updatedAt: updatedAthlete.updatedAt.toISOString(),
+        country: updatedAthlete.country,
+        state: updatedAthlete.state,
+        city: updatedAthlete.city,
+        latitude: updatedAthlete.latitude,
+        longitude: updatedAthlete.longitude,
         createdAt: updatedAthlete.createdAt.toISOString(),
+        updatedAt: updatedAthlete.updatedAt.toISOString(),
       },
     });
   } catch (error: any) {
