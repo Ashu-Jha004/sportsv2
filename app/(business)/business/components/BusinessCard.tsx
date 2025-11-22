@@ -45,7 +45,7 @@ export const BusinessCard = () => {
         "Match oversight",
         "Performance tracking",
       ],
-      route: "/business/services",
+      route: "/business/features/guide/onboarding",
       color: "from-blue-500 to-indigo-600",
       bgColor: "bg-blue-50",
       textColor: "text-blue-700",

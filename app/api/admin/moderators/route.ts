@@ -286,19 +286,26 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     const body = await request.json();
     const validatedData = bulkUpdateSchema.parse(body);
 
-    // Update applications in transaction
+    // Update applications + create notifications in a single transaction
     const updatedApplications = await prisma.$transaction(async (tx) => {
       const updates = [];
 
       for (const applicationId of validatedData.applicationIds) {
-        // Verify application exists
+        // Verify application exists and fetch related athlete id
         const existingApp = await tx.guide.findUnique({
           where: { id: applicationId },
           select: {
             id: true,
             status: true,
             guideEmail: true,
-            user: { select: { email: true } },
+            user: {
+              select: {
+                id: true, // Athlete.id
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
           },
         });
 
@@ -306,7 +313,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
           throw new Error(`Application ${applicationId} not found`);
         }
 
-        // Update application
+        // Update application status
         const updated = await tx.guide.update({
           where: { id: applicationId },
           data: {
@@ -328,6 +335,44 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         });
 
         updates.push(updated);
+
+        // Create notification for the applicant (if we have an athlete id)
+        if (existingApp.user?.id) {
+          const isApproved = validatedData.status === "approved";
+          const isRejected = validatedData.status === "rejected";
+
+          // Only notify on meaningful decisions
+          if (isApproved || isRejected) {
+            const title = isApproved
+              ? "Guide application approved"
+              : "Guide application rejected";
+
+            const message = isApproved
+              ? "Your guide application has been approved. You now have access to the full guide dashboard."
+              : "Your guide application has been rejected. Please review the admin notes and consider updating your information.";
+
+            await tx.notification.create({
+              data: {
+                athleteId: existingApp.user.id, // Athlete.id
+                actorId: adminUser.id, // Admin athlete id
+                type: isApproved
+                  ? "APPLICATION_APPROVED"
+                  : "APPLICATION_REJECTED",
+                title,
+                message,
+                data: {
+                  guideId: existingApp.id,
+                  newStatus: validatedData.status,
+                  oldStatus: existingApp.status,
+                  reviewNote: validatedData.reviewNote ?? null,
+                  adminId: adminUser.id,
+                  adminEmail: adminUser.email,
+                },
+                isRead: false,
+              },
+            });
+          }
+        }
 
         // Log individual application update
         await logAdminAction(
