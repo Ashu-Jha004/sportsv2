@@ -250,3 +250,246 @@ export async function updateGuideProfile(
     };
   }
 }
+
+// --- Stats update via OTP ---
+
+const verifyStatsUpdateOtpSchema = z.object({
+  otp: z
+    .string()
+    .trim()
+    .min(1, "OTP is required.")
+    .max(6, "OTP must be at most 6 digits.")
+    .regex(/^\d+$/, "OTP must be numeric."),
+});
+
+type VerifyStatsUpdateOtpInput = z.infer<typeof verifyStatsUpdateOtpSchema>;
+
+type VerifyStatsUpdateOtpResult =
+  | {
+      success: true;
+      athlete: {
+        id: string;
+        clerkUserId: string;
+        username: string | null;
+        firstName: string | null;
+        lastName: string | null;
+        profileImage: string | null;
+        primarySport: string | null;
+        gender: string | null;
+        rank: string;
+        class: string;
+        city: string | null;
+        state: string | null;
+        country: string | null;
+      };
+    }
+  | {
+      success: false;
+      code:
+        | "UNAUTHENTICATED"
+        | "ATHLETE_NOT_FOUND"
+        | "GUIDE_NOT_FOUND"
+        | "GUIDE_NOT_APPROVED"
+        | "VALIDATION_ERROR"
+        | "OTP_INVALID"
+        | "REQUEST_NOT_FOUND"
+        | "REQUEST_STATUS_INVALID"
+        | "INTERNAL_ERROR";
+      message: string;
+      fieldErrors?: Record<string, string[]>;
+      traceId?: string;
+    };
+
+export async function verifyStatsUpdateOtpAction(
+  raw: unknown
+): Promise<VerifyStatsUpdateOtpResult> {
+  const traceId = generateTraceId();
+
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      console.warn("[verifyStatsUpdateOtpAction] Unauthenticated", { traceId });
+      return {
+        success: false,
+        code: "UNAUTHENTICATED",
+        message: "Authentication required.",
+        traceId,
+      };
+    }
+
+    const parsed = verifyStatsUpdateOtpSchema.safeParse(raw);
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors;
+      console.warn("[verifyStatsUpdateOtpAction] Validation failed", {
+        traceId,
+        fieldErrors,
+      });
+      return {
+        success: false,
+        code: "VALIDATION_ERROR",
+        message: "OTP input is invalid.",
+        fieldErrors,
+        traceId,
+      };
+    }
+
+    const { otp } = parsed.data;
+
+    // Resolve athlete by Clerk user id
+    const athlete = await prisma.athlete.findUnique({
+      where: { clerkUserId: userId },
+      select: { id: true },
+    });
+
+    if (!athlete) {
+      console.error("[verifyStatsUpdateOtpAction] Athlete not found", {
+        traceId,
+        clerkUserId: userId,
+      });
+      return {
+        success: false,
+        code: "ATHLETE_NOT_FOUND",
+        message: "No athlete profile found.",
+        traceId,
+      };
+    }
+
+    // Resolve guide by athlete id
+    const guide = await prisma.guide.findUnique({
+      where: { userId: athlete.id },
+      select: { id: true, status: true },
+    });
+
+    if (!guide) {
+      console.warn("[verifyStatsUpdateOtpAction] Guide not found", {
+        traceId,
+        athleteId: athlete.id,
+      });
+      return {
+        success: false,
+        code: "GUIDE_NOT_FOUND",
+        message: "No guide profile found.",
+        traceId,
+      };
+    }
+
+    if (guide.status !== "approved") {
+      console.warn("[verifyStatsUpdateOtpAction] Guide not approved", {
+        traceId,
+        guideId: guide.id,
+        status: guide.status,
+      });
+      return {
+        success: false,
+        code: "GUIDE_NOT_APPROVED",
+        message: "Only approved guides can perform stats updates.",
+        traceId,
+      };
+    }
+
+    // Look up PhysicalEvaluationRequest by OTP + guide
+    const request = await prisma.physicalEvaluationRequest.findFirst({
+      where: {
+        guideId: guide.id,
+        OTP: Number(otp),
+        status: "ACCEPTED"
+      },
+      select: {
+        id: true,
+        status: true,
+        athlete: {
+          select: {
+            id: true,
+            clerkUserId: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            profileImage: true,
+            primarySport: true,
+            gender: true,
+            rank: true,
+            class: true,
+            city: true,
+            state: true,
+            country: true,
+          },
+        },
+      },
+    });
+
+    if (!request) {
+      console.warn("[verifyStatsUpdateOtpAction] No matching request for OTP", {
+        traceId,
+        guideId: guide.id,
+      });
+      // Keep message generic for security
+      return {
+        success: false,
+        code: "OTP_INVALID",
+        message: "Invalid or expired OTP.",
+        traceId,
+      };
+    }
+
+    if (request.status !== "ACCEPTED") {
+      console.warn(
+        "[verifyStatsUpdateOtpAction] Request not in ACCEPTED status",
+        {
+          traceId,
+          requestId: request.id,
+          status: request.status,
+        }
+      );
+      return {
+        success: false,
+        code: "REQUEST_STATUS_INVALID",
+        message:
+          "This evaluation request is not in a valid state for stats update.",
+        traceId,
+      };
+    }
+
+    const a = request.athlete;
+
+    console.info("[verifyStatsUpdateOtpAction] OTP verified", {
+      traceId,
+      guideId: guide.id,
+      athleteId: a.id,
+      requestId: request.id,
+    });
+
+    return {
+      success: true,
+      athlete: {
+        id: a.id,
+        clerkUserId: a.clerkUserId,
+        username: a.username,
+        firstName: a.firstName,
+        lastName: a.lastName,
+        profileImage: a.profileImage,
+        primarySport: a.primarySport ?? null,
+        gender: a.gender ?? null,
+        rank: a.rank,
+        class: a.class,
+        city: a.city ?? null,
+        state: a.state ?? null,
+        country: a.country ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("[verifyStatsUpdateOtpAction] Unexpected error", {
+      traceId,
+      error,
+    });
+
+    return {
+      success: false,
+      code: "INTERNAL_ERROR",
+      message:
+        process.env.NODE_ENV === "development"
+          ? `Failed to verify OTP. Trace: ${traceId}`
+          : "Failed to verify OTP. Please try again.",
+      traceId,
+    };
+  }
+}

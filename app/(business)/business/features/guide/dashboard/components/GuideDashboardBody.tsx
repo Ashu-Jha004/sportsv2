@@ -5,7 +5,6 @@ import { useCallback, useState, useTransition } from "react";
 import {
   useForm,
   type SubmitHandler,
-  type UseFormReturn,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,7 +31,12 @@ import { Card } from "@/components/ui/card";
 import { updateGuideProfile } from "../actions";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useMemo } from "react"; // add useMemo
+import { GuideActionsCard } from "./GuideActionCard";
 
+import { useVerifyStatsOtp } from "../../hooks/useVerifyStatsOtp";
+import { useGuideStatsOtpStore } from "@/stores/guide/OTPVeification/guideStatsOtpStore";
+import { useRouter } from "next/navigation";
 const guideProfileEditSchema = z.object({
   guideEmail: z.string().trim().email("Please provide a valid email."),
   primarySport: z.string().min(1, "Primary sport is required."),
@@ -67,8 +71,6 @@ const guideProfileEditSchema = z.object({
   city: z.string().trim().min(1, "City is required."),
 });
 
-type GuideProfileEditInput = z.infer<typeof guideProfileEditSchema>;
-
 export default function GuideDashboardBody({ guide }: any) {
   return (
     <section className="grid gap-4 md:grid-cols-[2fr_1fr]">
@@ -79,10 +81,6 @@ export default function GuideDashboardBody({ guide }: any) {
 }
 
 // === About card with edit dialog ===
-
-type AboutCardProps = {
-  guide: any["guide"];
-};
 
 function AboutCard({ guide }: any) {
   const [open, setOpen] = useState(false);
@@ -361,26 +359,3 @@ function AboutCard({ guide }: any) {
   );
 }
 
-// === Guide actions card ===
-
-function GuideActionsCard() {
-  return (
-    <Card className="flex flex-col gap-4 p-4 md:p-6">
-      <h2 className="text-base font-semibold text-gray-900">Guide actions</h2>
-      <p className="text-xs text-gray-500">
-        Quick actions for managing your work as a guide. More tools will be
-        added over time.
-      </p>
-
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled
-        className="justify-start"
-      >
-        Stat update (coming soon)
-      </Button>
-    </Card>
-  );
-}

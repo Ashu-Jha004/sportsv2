@@ -171,7 +171,7 @@ model StaminaAndRecovery {
   id                         String @id @default(uuid())
   statId                     String
   stats                      Stats  @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
-  vo2Max                     Float
+  vo2Max                     Float?
   flexibility                Json?
   overallFlexibilityScore    Float?
   cardiovascularFitnessScore Float?
@@ -206,7 +206,7 @@ model SpeedAndAgility {
   id                          String @id @default(uuid())
   statId                      String
   stats                       Stats  @relation("SpeedAndAgilityRelation", fields: [statId], references: [id], onDelete: Cascade)
-  sprintSpeed                 Float
+  sprintSpeed                 Float?
   //updated field names to be more descriptive
   Ten_Meter_Sprint            Json?
   Fourty_Meter_Dash           Json?
@@ -238,7 +238,7 @@ model StrengthAndPower {
 
   // Test metadata
   testDate          DateTime? @default(now())
-  athleteBodyWeight Float // kg - needed for calculations
+  athleteBodyWeight Float? // kg - needed for calculations
 
   // ============================================
   // JUMP TESTS (JSON - stores full test data with attempts)
@@ -280,9 +280,9 @@ model StrengthAndPower {
   // ============================================
   // CALCULATED SCORES (0-100 scale)
   // ============================================
-  muscleMass        Float @default(0)
-  enduranceStrength Float @default(0)
-  explosivePower    Float @default(0)
+  muscleMass        Float? @default(0)
+  enduranceStrength Float? @default(0)
+  explosivePower    Float? @default(0)
 
   // ============================================
   // METADATA
