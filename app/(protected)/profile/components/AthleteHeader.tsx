@@ -108,6 +108,7 @@ export default function AthleteHeader({
     <section className="relative w-full max-w-6xl mx-auto rounded-xl overflow-hidden shadow-lg bg-white">
       {/* Banner */}
       <div
+        title="banner image"
         className="h-48 w-full object-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${BANNER_URL})` }}
         aria-label="Banner Image"

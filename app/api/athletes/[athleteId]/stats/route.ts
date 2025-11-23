@@ -36,7 +36,7 @@ export async function GET(
   const speedSlice = stats.speed?.[0] ?? null;
   const staminaSlice = stats.stamina?.[0] ?? null;
 
-  const response: AthleteStatsResponse = {
+  const response: any = {
     hasStats: true,
     strength: strengthSlice?.enduranceStrength ?? 0,
     speed: speedSlice?.sprintSpeed ?? 0,

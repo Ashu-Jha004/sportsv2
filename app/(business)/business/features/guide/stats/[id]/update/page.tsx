@@ -1,13 +1,9 @@
-// app/business/features/guide/stats/[clerkUserId]/update/page.tsx
 "use server";
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
-
-type StatsWizardPageProps = {
-  params: { clerkUserId: string };
-};
-
+import { AthleteHeader } from "@/components/guide/stats-wizard/AthleteHeader";
+import { StatsWizardShell } from "@/components/guide/stats-wizard/StatsWizardShell";
 function generateTraceId() {
   return `stats_wizard_${Math.random()
     .toString(36)
@@ -37,7 +33,12 @@ export default async function StatsWizardPage({
   // Guide must be the one running this evaluation
   const guideAthlete = await prisma.athlete.findUnique({
     where: { clerkUserId: userId },
-    select: { id: true },
+    select: {
+      id: true,
+      firstName: true, // ADDED: for guide name
+      lastName: true, // ADDED: for guide name
+      username: true, // ADDED: fallback for guide name
+    },
   });
 
   if (!guideAthlete) {
@@ -47,7 +48,7 @@ export default async function StatsWizardPage({
         clerkUserId: userId,
       });
     }
-    redirect("/"); // or a safer error page
+    redirect("/");
   }
 
   const guide = await prisma.guide.findUnique({
@@ -83,6 +84,7 @@ export default async function StatsWizardPage({
       city: true,
       state: true,
       country: true,
+      dateOfBirth: true, // ADDED: for age calculation
     },
   });
 
@@ -102,8 +104,6 @@ export default async function StatsWizardPage({
       guideId: guide.id,
       athleteId: athlete.id,
       status: "ACCEPTED",
-      // optional: add time window conditions here later
-      // evaluationCompletedAt: null, // if you add such a field
     },
     select: {
       id: true,
@@ -129,9 +129,6 @@ export default async function StatsWizardPage({
     redirect("/guide/dashboard");
   }
 
-  // TODO: later we will load Stats + StrengthAndPower + SpeedAndAgility + StaminaAndRecovery here
-  // and pass them into the client wizard shell as initial DTO props.
-
   if (process.env.NODE_ENV === "development") {
     console.info("[StatsWizardPage] Access granted to stats wizard", {
       traceId,
@@ -141,24 +138,69 @@ export default async function StatsWizardPage({
     });
   }
 
+  // ============================================
+  // TRANSFORM DATA FOR COMPONENTS
+  // ============================================
+
+  // Calculate age if dateOfBirth exists
+  const age = athlete.dateOfBirth
+    ? new Date().getFullYear() - new Date(athlete.dateOfBirth).getFullYear()
+    : undefined;
+
+  // Transform athlete data to match AthleteInfo type
+  const athleteInfo = {
+    id: athlete.id,
+    clerkUserId: athlete.clerkUserId,
+    username: athlete.username,
+    firstName: athlete.firstName,
+    lastName: athlete.lastName,
+    profileImage: athlete.profileImage,
+    primarySport: athlete.primarySport,
+    gender: athlete.gender,
+    rank: athlete.rank,
+    class: athlete.class,
+    city: athlete.city,
+    state: athlete.state,
+    country: athlete.country,
+    dateOfBirth: athlete.dateOfBirth?.toISOString() || null,
+    age,
+  };
+
+  // Generate guide name
+  const guideName =
+    guideAthlete.firstName || guideAthlete.lastName
+      ? `${guideAthlete.firstName ?? ""} ${guideAthlete.lastName ?? ""}`.trim()
+      : guideAthlete.username ?? "Unknown Guide";
+
+  // Transform guide data to match GuideInfo type
+  const guideInfo = {
+    id: guide.id,
+    userId: guideAthlete.id,
+    name: guideName,
+  };
+
+  // Transform evaluation data to match EvaluationMetadata type
+  const evaluationMetadata = {
+    requestId: activeRequest.id,
+    scheduledDate: activeRequest.scheduledDate?.toISOString() || null,
+    scheduledTime: activeRequest.scheduledTime,
+    evaluationDate: new Date().toISOString(),
+    otpVerified: true, // Since they passed OTP verification to get here
+    otpVerifiedAt: new Date().toISOString(),
+  };
+
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-6">
-      <header className="flex flex-col gap-2 border-b pb-3">
-        <h1 className="text-lg font-semibold">
-          Stats update for{" "}
-          {athlete.firstName || athlete.lastName
-            ? `${athlete.firstName ?? ""} ${athlete.lastName ?? ""}`.trim()
-            : athlete.username ?? "Unknown athlete"}
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Guided evaluation wizard. Only available during an active evaluation
-          for this athlete.
-        </p>
-      </header>
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
+      {/* UPDATED: Replaced old header with AthleteHeader component */}
+      <AthleteHeader athlete={athleteInfo} evaluation={evaluationMetadata} />
 
       {/* Placeholder: the multi-step wizard shell will be mounted here in the next sub-process */}
       <div className="rounded-lg border bg-card p-4 text-xs text-muted-foreground">
-        Stats wizard shell coming next. Access is correctly guarded for now.
+        <StatsWizardShell
+          athlete={athleteInfo}
+          guide={guideInfo}
+          evaluation={evaluationMetadata}
+        />
       </div>
     </div>
   );
