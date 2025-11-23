@@ -270,10 +270,9 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   const traceId = generateTraceId();
 
   try {
-    // Validate admin authentication
+    // 1) Admin auth
     const adminUser = await validateAdminAuth();
 
-    // Check if admin can approve moderators
     if (!hasPermission(adminUser.adminRole, "canApproveModerators")) {
       return createErrorResponse(
         "Insufficient permissions to update moderator applications",
@@ -282,16 +281,34 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Parse and validate request body
+    // 2) Parse and validate body
     const body = await request.json();
     const validatedData = bulkUpdateSchema.parse(body);
 
-    // Update applications + create notifications in a single transaction
-    const updatedApplications = await prisma.$transaction(async (tx) => {
-      const updates = [];
+    // Deduplicate IDs
+    const applicationIds = Array.from(
+      new Set(validatedData.applicationIds)
+    ) as string[];
 
-      for (const applicationId of validatedData.applicationIds) {
-        // Verify application exists and fetch related athlete id
+    if (applicationIds.length === 0) {
+      return createErrorResponse(
+        "No applications provided to update.",
+        400,
+        traceId
+      );
+    }
+
+    // Strict status validation
+    const allowedStatuses = ["approved", "rejected", "pending_review"] as const;
+    if (!allowedStatuses.includes(validatedData.status as any)) {
+      return createErrorResponse("Invalid status value.", 400, traceId);
+    }
+
+    // 3) Transaction: update guides + notifications + logs
+    const updatedApplications = await prisma.$transaction(async (tx) => {
+      const updates: any[] = [];
+
+      for (const applicationId of applicationIds) {
         const existingApp = await tx.guide.findUnique({
           where: { id: applicationId },
           select: {
@@ -309,11 +326,41 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
           },
         });
 
+        // Skip missing instead of failing whole batch
         if (!existingApp) {
-          throw new Error(`Application ${applicationId} not found`);
+          console.warn("[PATCH /api/admin/moderators] Application missing", {
+            traceId,
+            applicationId,
+          });
+          continue;
         }
 
-        // Update application status
+        // If status already matches, avoid extra writes but still log the attempt
+        if (existingApp.status === validatedData.status) {
+          await logAdminAction(
+            adminUser.id,
+            "UPDATE_MODERATOR_APPLICATION",
+            {
+              targetResourceId: applicationId,
+              targetResource: "MODERATOR_APPLICATION",
+              oldStatus: existingApp.status,
+              newStatus: validatedData.status,
+              reviewNote: validatedData.reviewNote,
+              applicantEmail: existingApp.user?.email || existingApp.guideEmail,
+              skipped: true,
+              reason: "Status already up to date",
+            },
+            request
+          );
+
+          updates.push({
+            ...existingApp,
+            status: existingApp.status,
+          });
+          continue;
+        }
+
+        // Real status update
         const updated = await tx.guide.update({
           where: { id: applicationId },
           data: {
@@ -336,12 +383,11 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
         updates.push(updated);
 
-        // Create notification for the applicant (if we have an athlete id)
+        // Notification for applicant
         if (existingApp.user?.id) {
           const isApproved = validatedData.status === "approved";
           const isRejected = validatedData.status === "rejected";
 
-          // Only notify on meaningful decisions
           if (isApproved || isRejected) {
             const title = isApproved
               ? "Guide application approved"
@@ -353,8 +399,8 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
 
             await tx.notification.create({
               data: {
-                athleteId: existingApp.user.id, // Athlete.id
-                actorId: adminUser.id, // Admin athlete id
+                athleteId: existingApp.user.id,
+                actorId: adminUser.id,
                 type: isApproved
                   ? "APPLICATION_APPROVED"
                   : "APPLICATION_REJECTED",
@@ -374,7 +420,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
           }
         }
 
-        // Log individual application update
+        // Per-application log
         await logAdminAction(
           adminUser.id,
           "UPDATE_MODERATOR_APPLICATION",
@@ -393,12 +439,12 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       return updates;
     });
 
-    // Log bulk action summary
+    // 4) Bulk summary log
     await logAdminAction(
       adminUser.id,
       "BULK_UPDATE_MODERATOR_APPLICATIONS",
       {
-        applicationIds: validatedData.applicationIds,
+        applicationIds,
         newStatus: validatedData.status,
         reviewNote: validatedData.reviewNote,
         count: updatedApplications.length,
@@ -406,7 +452,6 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       request
     );
 
-    // Prepare success response
     const responseMessage =
       updatedApplications.length === 1
         ? `Application ${validatedData.status} successfully`

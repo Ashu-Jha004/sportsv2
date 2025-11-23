@@ -35,7 +35,7 @@ import {
 } from "../../types/AdminModeratorsPanel";
 import { ApplicationDetailModalProps } from "../../types/AdminModeratorsPanel";
 import { useRef, useCallback } from "react";
-
+import { toast } from "sonner";
 // ✅ NEW: Document utilities
 const getDocumentInfo = (url: string) => {
   const filename = url.split("/").pop()?.split("?")[0] || "document";
@@ -185,16 +185,25 @@ export default function AdminModeratorsPanel({
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]); // Empty dependency array - runs once on mount
+
   // ✅ REPLACE handleBulkStatusUpdate with optimistic updates
   const handleBulkStatusUpdate = async (newStatus: "approved" | "rejected") => {
+    if (bulkUpdating) {
+      return;
+    }
     if (selectedApplications.length === 0) {
       alert("Please select applications to update");
+      toast.error("No applications selected", {
+        description:
+          "Select at least one application before performing a bulk action.",
+      });
       return;
     }
 
-    const reviewNote = prompt(
-      `Add a review note for ${newStatus} applications (optional):`
-    );
+    const reviewNote =
+      window.prompt(
+        `Add a review note for ${newStatus} applications (optional):`
+      ) || undefined;
 
     // Store original data for rollback
     const originalData = data;
@@ -209,17 +218,17 @@ export default function AdminModeratorsPanel({
             ? {
                 ...app,
                 status: newStatus as any,
-                reviewNote: reviewNote || null,
+                reviewNote: reviewNote ?? null,
               }
             : app
         );
-
+        const delta = selectedApplications.length;
         setData({
           ...data,
           applications: updatedApplications,
           stats: {
             ...data.stats,
-            [newStatus]: data.stats[newStatus] + selectedApplications.length,
+            [newStatus]: data.stats[newStatus] + delta,
             pending_review: Math.max(
               0,
               data.stats.pending_review - selectedApplications.length
@@ -242,21 +251,18 @@ export default function AdminModeratorsPanel({
 
       if (!response.ok) {
         // Rollback on failure
-        if (originalData) {
-          setData(originalData);
-        }
-
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error?.message ||
-            `Failed to update applications: ${response.status}`
-        );
+        if (originalData) setData(originalData);
+        const errorData = await response.json().catch(() => null);
+        const message =
+          errorData?.error?.message ??
+          `Failed to update applications (${response.status})`;
+        throw new Error(message);
       }
 
       setSelectedApplications([]);
-      alert(
-        `Successfully updated ${selectedApplications.length} application(s) to ${newStatus}`
-      );
+      toast.success("Applications Update has been made! ", {
+        description: `Successfully updated`,
+      });
     } catch (err) {
       // Rollback to original state on error
       if (originalData) {
@@ -271,6 +277,7 @@ export default function AdminModeratorsPanel({
       setBulkUpdating(false);
     }
   };
+
   const handleRefresh = useCallback(() => {
     lastFetchParams.current = ""; // Reset cache
     fetchApplications(true);

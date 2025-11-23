@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { useRouter } from "next/navigation";
 import { AlertCircle, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 const STEP_TITLES = [
   "Contact details",
@@ -188,6 +189,10 @@ export default function GuideOnboardingWizard() {
             });
           });
 
+          toast.error("Submition is failed!", {
+            description: `Submition Failed! try again some time later.`,
+          });
+
           if (mapped.formError) {
             console.warn(
               "[GuideOnboardingWizard] Submission error",
@@ -197,15 +202,20 @@ export default function GuideOnboardingWizard() {
 
           setSubmitting(false);
           return;
-        }
-
+        } else
+          toast.success("Congrats! Submittion has been made.", {
+            duration: 3000,
+            description: "Your guide application is under review.",
+          });
         console.info(
           "[GuideOnboardingWizard] Application submitted successfully",
           { guideId: result.guideId }
         );
 
         setSubmitting(false);
-        router.replace("/guide/dashboard?status=pending_review");
+        router.replace(
+          "/business/features/guide/dashboard?status=pending_review"
+        );
       });
     },
     [form, router, setSubmitting, updateData, startTransition]

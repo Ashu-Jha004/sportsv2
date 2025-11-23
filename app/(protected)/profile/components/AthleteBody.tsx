@@ -6,7 +6,7 @@ import MediaTab from "./MediaTab";
 import MatchTab from "./MatchTab";
 import StatsTab from "./StatTab";
 import { Info, Camera, ListChecks, BarChart2 } from "lucide-react";
-
+import { useAthleteStats } from "../hooks/profile/useAthleteStats";
 export default function AthleteBody({
   athlete,
   stats,
@@ -19,7 +19,7 @@ export default function AthleteBody({
   const handleNavigation = useCallback((section: string) => {
     setActiveSection(section);
   }, []);
-
+  const { data, isLoading, error } = useAthleteStats(athlete.clerkUserId);
   return (
     <section className="max-w-6xl mx-auto mt-10 bg-white rounded-xl shadow-md p-6">
       {/* Responsive Navigation Menu */}
@@ -67,7 +67,7 @@ export default function AthleteBody({
         <MatchTab matches={matches} isOwnProfile={isOwnProfile} />
       )}
       {activeSection === "stats" && (
-        <StatsTab stats={stats} isOwnProfile={isOwnProfile} />
+        <StatsTab stats={data} isOwnProfile={isOwnProfile} />
       )}
     </section>
   );

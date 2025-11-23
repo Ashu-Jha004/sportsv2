@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Mail, RefreshCw, Settings, MapPin } from "lucide-react";
 import { updateGuideLocation } from "../actions";
+import { toast } from "sonner";
 
 type GuideDashboardHeaderProps = {
   guide: {
     id: string;
-    name: string|null;
+    name: string | null;
     email: string;
     status: "pending_review" | "approved" | "rejected";
     location: {
@@ -36,6 +37,9 @@ export default function GuideDashboardHeader({
 
   const handleUpdateLocation = useCallback(async () => {
     if (!navigator.geolocation) {
+      toast.error("Location Can not be updated!", {
+        description: "Geolocation is not supported by this browser.",
+      });
       console.warn("[GuideDashboardHeader] Geolocation not available");
       alert("Geolocation is not supported by your browser.");
       return;
@@ -63,7 +67,13 @@ export default function GuideDashboardHeader({
               ? `Location update failed: ${result.message}`
               : "Location update failed. Please try again."
           );
+          toast.error("We have database error!", {
+            description: result.message,
+          });
         } else {
+          toast.success("Location Updated!", {
+            description: "Your current location has been saved.",
+          });
           router.refresh();
         }
 

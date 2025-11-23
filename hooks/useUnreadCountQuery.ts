@@ -12,7 +12,7 @@ export function useUnreadCountQuery(options?: { enabled?: boolean }) {
     queryKey: notificationKeys.unreadCount(),
     queryFn: () => fetchUnreadCountClient(),
     enabled,
-    refetchInterval: enabled ? 10000 : false, // poll every 10s
+    refetchInterval: enabled ? 500000 : false, // poll every 10s
     refetchOnWindowFocus: true,
   });
 

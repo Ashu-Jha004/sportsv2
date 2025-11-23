@@ -12,6 +12,7 @@ import type {
   MatchHistory,
 } from "@/types/profile/athlete-profile.types";
 import { Sport } from "../schemas/edit-profile-schema";
+import { useAthleteStats } from "../hooks/profile/useAthleteStats";
 
 interface PageProps {
   params: Promise<{ username?: string }>;
@@ -27,7 +28,7 @@ export default function DynamicProfilePage({ params }: PageProps) {
   // /profile/[username] -> public profile
   const isOwnProfile = routeUsername == null;
 
-  const [profileData, setProfileData] = useState<AthleteProfile | null>(null);
+  const [profileData, setProfileData] = useState<any>(null);
   const [statsData, setStatsData] = useState<AthleteStats | null>(null);
   const [mediaData, setMediaData] = useState<MediaItem[]>([]);
   const [matchesData, setMatchesData] = useState<MatchHistory[]>([]);
@@ -51,13 +52,6 @@ export default function DynamicProfilePage({ params }: PageProps) {
         const response = await fetch(url);
         const data = await response.json();
 
-        console.log("🔍 STEP 2: Raw API response:", {
-          success: data.success,
-          hasData: !!data.data,
-          dataKeys: data.data ? Object.keys(data.data) : [],
-          fullData: data.data,
-        });
-
         if (!response.ok || !data.success) {
           throw new Error(data.error || "Failed to load profile");
         }
@@ -70,7 +64,6 @@ export default function DynamicProfilePage({ params }: PageProps) {
             city: data.data.city,
             allKeys: Object.keys(data.data),
           });
-
           setProfileData(data.data);
 
           // Mock stats/media/matches as before
@@ -180,13 +173,6 @@ export default function DynamicProfilePage({ params }: PageProps) {
       </div>
     );
   }
-
-  console.log("🔍 STEP 5: About to render components with athlete:", {
-    athleteExists: !!profileData,
-    athleteKeys: Object.keys(profileData),
-    hasCity: !!profileData.city,
-    cityValue: profileData.city,
-  });
 
   return (
     <div className="min-h-screen bg-gray-50">

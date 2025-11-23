@@ -6,6 +6,7 @@ import React from "react";
 import { StatsTabProps } from "@/types/profile/athlete-profile.types";
 import { Progress } from "@/components/ui/progress";
 import { BarChart2 } from "lucide-react";
+import { StatsFallback } from "./StatsFallback";
 
 const statLabels = [
   { key: "strength", label: "Strength" },
@@ -16,10 +17,13 @@ const statLabels = [
   { key: "flexibility", label: "Flexibility" },
 ];
 
-export default function StatsTab({ stats }: StatsTabProps) {
-  if (!stats) {
+export default function StatsTab({ stats }: any) {
+  console.log(stats);
+  if (stats.hasStats === false) {
     return (
-      <p className="text-center text-gray-500">Stats data not available.</p>
+      <>
+        <StatsFallback isSelf />
+      </>
     );
   }
 

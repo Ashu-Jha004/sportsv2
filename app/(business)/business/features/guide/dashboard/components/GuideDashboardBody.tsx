@@ -31,6 +31,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { updateGuideProfile } from "../actions";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const guideProfileEditSchema = z.object({
   guideEmail: z.string().trim().email("Please provide a valid email."),
@@ -141,6 +142,9 @@ function AboutCard({ guide }: any) {
                   type: "server",
                   message,
                 });
+                toast.error("Submition is failed!", {
+                  description: `Submition Failed! Reason ${message}.`,
+                });
               }
             });
           }
@@ -153,7 +157,7 @@ function AboutCard({ guide }: any) {
 
           return;
         }
-
+        toast.success("Submition has beedn made successfully, congrats!");
         setOpen(false);
       });
     },
