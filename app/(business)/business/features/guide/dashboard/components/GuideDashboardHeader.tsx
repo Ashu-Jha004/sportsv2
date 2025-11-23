@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Mail, RefreshCw, Settings, MapPin } from "lucide-react";
 import { updateGuideLocation } from "../actions";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader as ShadDialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { GuideRequestsDialogBody } from "./GuideRequestsDialogBody";
 
 type GuideDashboardHeaderProps = {
   guide: {
@@ -30,6 +37,7 @@ export default function GuideDashboardHeader({
 }: GuideDashboardHeaderProps) {
   const router = useRouter();
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [requestsOpen, setRequestsOpen] = useState(false);
 
   const handleRefresh = useCallback(() => {
     router.refresh();
@@ -55,29 +63,42 @@ export default function GuideDashboardHeader({
           longitude,
         });
 
-        const result = await updateGuideLocation({ latitude, longitude });
+        try {
+          const result = await updateGuideLocation({ latitude, longitude });
 
-        if (!result.success) {
+          if (!result.success) {
+            console.error(
+              "[GuideDashboardHeader] Failed to update location",
+              result
+            );
+            alert(
+              process.env.NODE_ENV === "development"
+                ? `Location update failed: ${result.message}`
+                : "Location update failed. Please try again."
+            );
+            toast.error("We have database error!", {
+              description: result.message,
+            });
+          } else {
+            toast.success("Location Updated!", {
+              description: "Your current location has been saved.",
+            });
+            router.refresh();
+          }
+        } catch (error) {
           console.error(
-            "[GuideDashboardHeader] Failed to update location",
-            result
+            "[GuideDashboardHeader] updateGuideLocation error",
+            error
           );
-          alert(
-            process.env.NODE_ENV === "development"
-              ? `Location update failed: ${result.message}`
-              : "Location update failed. Please try again."
-          );
-          toast.error("We have database error!", {
-            description: result.message,
+          toast.error("Location update failed", {
+            description:
+              process.env.NODE_ENV === "development"
+                ? String(error)
+                : "Unexpected error while updating location.",
           });
-        } else {
-          toast.success("Location Updated!", {
-            description: "Your current location has been saved.",
-          });
-          router.refresh();
+        } finally {
+          setIsUpdatingLocation(false);
         }
-
-        setIsUpdatingLocation(false);
       },
       (err) => {
         console.error("[GuideDashboardHeader] Browser geolocation error", err);
@@ -102,70 +123,83 @@ export default function GuideDashboardHeader({
       : "bg-red-50 text-red-700 ring-red-200";
 
   return (
-    <header className="flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            Guide dashboard
-          </h1>
-          <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${statusClasses}`}
-          >
-            {statusLabel}
-          </span>
+    <>
+      <header className="flex flex-col gap-4 border-b pb-4 md:flex-row md:items-center md:justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold text-gray-900">
+              Guide dashboard
+            </h1>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${statusClasses}`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+
+          <p className="text-sm text-gray-500">
+            {guide.name} • {guide.primarySport ?? "No primary sport set"}
+          </p>
+          <p className="text-xs text-gray-500">
+            {guide.location.city && guide.location.country
+              ? `${guide.location.city}, ${guide.location.country}`
+              : "Location not set"}
+          </p>
         </div>
 
-        <p className="text-sm text-gray-500">
-          {guide.name} • {guide.primarySport ?? "No primary sport set"}
-        </p>
-        <p className="text-xs text-gray-500">
-          {guide.location.city && guide.location.country
-            ? `${guide.location.city}, ${guide.location.country}`
-            : "Location not set"}
-        </p>
-      </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* New: mail opens dialog */}
+          <Dialog open={requestsOpen} onOpenChange={setRequestsOpen}>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Open physical evaluation requests"
+              onClick={() => setRequestsOpen(true)}
+            >
+              <Mail className="h-4 w-4" />
+            </Button>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label="Open messages"
-        >
-          <Mail className="h-4 w-4" />
-        </Button>
+            <DialogContent className="max-w-3xl">
+              <ShadDialogHeader>
+                <DialogTitle>Physical evaluation requests</DialogTitle>
+              </ShadDialogHeader>
+              <GuideRequestsDialogBody guideId={guide.id} />
+            </DialogContent>
+          </Dialog>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          onClick={handleRefresh}
-          aria-label="Refresh dashboard"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={handleRefresh}
+            aria-label="Refresh dashboard"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label="Open settings"
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="Open settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
 
-        <Button
-          type="button"
-          size="sm"
-          variant="default"
-          disabled={isUpdatingLocation}
-          onClick={handleUpdateLocation}
-          className="flex items-center gap-1"
-        >
-          <MapPin className="h-4 w-4" />
-          <span>{isUpdatingLocation ? "Updating…" : "Update location"}</span>
-        </Button>
-      </div>
-    </header>
+          <Button
+            type="button"
+            size="sm"
+            variant="default"
+            disabled={isUpdatingLocation}
+            onClick={handleUpdateLocation}
+            className="flex items-center gap-1"
+          >
+            <MapPin className="h-4 w-4" />
+            <span>{isUpdatingLocation ? "Updating…" : "Update location"}</span>
+          </Button>
+        </div>
+      </header>
+    </>
   );
 }
