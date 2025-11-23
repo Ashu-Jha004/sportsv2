@@ -8,10 +8,7 @@ export type NotificationActorDto = {
   profileImage?: string | null;
 };
 
-export type NotificationDto = {
-  id: string;
-  title: string;
-  message: string;
+export type NotificationType = {
   type:
     | "STAT_UPDATE_REQUEST"
     | "STAT_UPDATE_APPROVED"
@@ -35,12 +32,32 @@ export type NotificationDto = {
     | "MESSAGE"
     | "MENTION"
     | "STAT_UPDATE_PERMISSION"
-    | "FOLLOW";
+    | "FOLLOW"; // Deep-link built from type + data on server
+};
+
+export type NotificationDto = {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
   isRead: boolean;
-  createdAt: string; // ISO string for client
-  actor?: NotificationActorDto | null;
-  data?: Record<string, unknown> | null;
-  link?: string | null; // Deep-link built from type + data on server
+  link?: string | null;
+  createdAt: string; // or Date
+  actor?: {
+    username: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    profileImage: string | null;
+  } | null;
+  data?: {
+    requestId?: string;
+    guideId?: string;
+    otp?: number;
+    scheduledDate?: string;
+    scheduledTime?: string;
+    location?: string;
+    equipment?: string[];
+  };
 };
 
 export type NotificationsPageDto = {
