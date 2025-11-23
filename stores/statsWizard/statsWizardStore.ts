@@ -92,7 +92,7 @@ export type AthleteInfo = {
   lastName: string | null;
   profileImage: string | null;
   primarySport: string | null;
-  gender: "MALE" | "FEMALE" | "OTHER" | null;
+  gender: "MALE" | "FEMALE" | "OTHER" | null | "PREFER_NOT_TO_SAY";
   rank: string;
   class: string;
   city: string | null;
