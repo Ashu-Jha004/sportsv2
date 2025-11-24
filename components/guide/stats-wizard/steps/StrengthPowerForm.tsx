@@ -14,12 +14,13 @@ import { CheckCircle2, Circle, Info, Loader2 } from "lucide-react";
 import { useStatsWizardStore } from "@/stores/statsWizard/statsWizardStore";
 import { CountermovementJumpForm } from "./strength-tests/CountermovementJumpForm";
 import { calculateStrengthScore } from "@/lib/calculations/stats-calculations";
-import type {
-  CountermovementJumpTest,
-  LoadedSquatJumpTest,
-  DepthJumpTest,
-} from "@/types/stats/athlete-stats.types";
-
+import { PushUpsTestForm } from "./strength-tests/PushUpsTestForm";
+import { PullUpsTestForm } from "./strength-tests/PullUpsTestForm";
+import { PlankHoldForm } from "./strength-tests/PlankHoldForm";
+import { DeadliftVelocityForm } from "./strength-tests/DeadliftVelocityForm";
+import { BarbellHipThrustForm } from "./strength-tests/BarbellHipThrustForm";
+import { WeightedPullUpsForm } from "./strength-tests/WeightedPullUpsForm";
+import { BarbellRowForm } from "./strength-tests/BarbellRowForm";
 type StrengthPowerFormProps = {
   onComplete: () => void;
 };
@@ -36,6 +37,7 @@ type TestCompletionStatus = {
   hipThrust: boolean;
   pullUp: boolean;
   barbellRow: boolean;
+  weightedPullUps: boolean;
   plank: boolean;
   bodyweightPullUps: boolean;
 };
@@ -65,6 +67,7 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
     pullUp: !!strengthAndPower.Weighted_Pull_up,
     barbellRow: !!strengthAndPower.Barbell_Row,
     plank: !!strengthAndPower.Plank_Hold,
+    weightedPullUps: !!strengthAndPower.Weighted_Pull_up,
     bodyweightPullUps: !!strengthAndPower.pullUps,
   });
 
@@ -317,6 +320,235 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
         </AccordionItem>
 
         {/* Add more test accordions here... */}
+
+        {/* Push-Ups Test */}
+        <AccordionItem value="Push_Up" className="rounded-lg border bg-card">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.pushUp ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">Push-Ups Test</p>
+                <p className="text-xs text-muted-foreground">
+                  Upper body endurance - bodyweight and weighted push-ups
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+
+          <AccordionContent className="px-6 pb-6">
+            <PushUpsTestForm
+              initialData={strengthAndPower.Push_Up || undefined}
+              onSave={(data) => handleTestSave("Push_Up", "pushUp", data)}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          value="Weighted_Pull_up"
+          className="rounded-lg border bg-card"
+        >
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.pullUp ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">
+                  Weighted Pull-Ups Test
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Reps completed with weight (optional)
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <PullUpsTestForm
+              initialData={strengthAndPower.Weighted_Pull_up || undefined}
+              onSave={(data) =>
+                handleTestSave("Weighted_Pull_up", "pullUp", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Plank Hold Test */}
+        <AccordionItem value="Plank_Hold" className="rounded-lg border bg-card">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.plank ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">Plank Hold Test</p>
+                <p className="text-xs text-muted-foreground">
+                  Core endurance - bodyweight and weighted durations
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <PlankHoldForm
+              initialData={strengthAndPower.Plank_Hold || undefined}
+              onSave={(data) => handleTestSave("Plank_Hold", "plank", data)}
+            />
+          </AccordionContent>
+        </AccordionItem>
+        {/* Deadlift Velocity Test */}
+        <AccordionItem
+          value="Deadlift_Velocity"
+          className="rounded-lg border bg-card"
+        >
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.deadlift ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">
+                  Deadlift Velocity Test
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Measures 1RM and peak lifting velocity.
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <DeadliftVelocityForm
+              initialData={strengthAndPower.Deadlift_Velocity || undefined}
+              onSave={(data) =>
+                handleTestSave("Deadlift_Velocity", "deadlift", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+        {/* Barbell Hip Thrust Test */}
+        <AccordionItem
+          value="Barbell_Hip_Thrust"
+          className="rounded-lg border bg-card"
+        >
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.hipThrust ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">
+                  Barbell Hip Thrust Test
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Lower body strength test with weight and reps.
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <BarbellHipThrustForm
+              initialData={strengthAndPower.Barbell_Hip_Thrust || undefined}
+              onSave={(data) =>
+                handleTestSave("Barbell_Hip_Thrust", "hipThrust", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Weighted Pull-Ups Test */}
+        <AccordionItem
+          value="Weighted_Pull_up"
+          className="rounded-lg border bg-card"
+        >
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.weightedPullUps ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">
+                  Weighted Pull-Ups Test
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Upper body pulling strength with added weight.
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <WeightedPullUpsForm
+              initialData={strengthAndPower.Weighted_Pull_up || undefined}
+              onSave={(data) =>
+                handleTestSave("Weighted_Pull_up", "weightedPullUps", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem
+          value="Barbell_Row"
+          className="rounded-lg border bg-card"
+        >
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.barbellRow ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">
+                  Barbell Row Test
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Upper back strength test with load and reps.
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <BarbellRowForm
+              initialData={strengthAndPower.Barbell_Row || undefined}
+              onSave={(data) =>
+                handleTestSave("Barbell_Row", "barbellRow", data)
+              }
+            />
+          </AccordionContent>
+        </AccordionItem>
+
         {/* For brevity, showing pattern. You would add all 12 tests similarly */}
       </Accordion>
 

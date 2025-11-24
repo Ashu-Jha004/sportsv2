@@ -17,7 +17,14 @@ import type {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-
+import { StrengthPowerInstructions } from "./steps/StrengthPowerInstructions"; // ADDED
+import { StrengthPowerForm } from "./steps/StrengthPowerForm"; // ADDED
+import { InjuryManagement } from "./steps/InjuryManagement";
+import { ReviewAndSubmit } from "./steps/ReviewAndSubmit";
+import { SpeedAgilityInstructions } from "./steps/SpeedAgilityInstructions";
+import { SpeedAndAgilityForm } from "./steps/SpeedAndAgilityForm";
+import { StaminaRecoveryInstructions } from "./steps/StaminaRecoveryInstructions";
+import { StaminaAndRecoveryForm } from "./steps/StaminaAndRecoveryForm";
 type StatsWizardShellProps = {
   athlete: AthleteInfo;
   guide: GuideInfo;
@@ -59,26 +66,31 @@ export function StatsWizardShell({
         return <BasicMeasurementsForm onComplete={nextStep} />;
 
       case 3:
-        return (
-          <div className="flex flex-col items-center justify-center gap-4 py-12">
-            <h3 className="text-lg font-semibold">
-              Strength & Power Instructions
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Coming in next phase
-            </p>
-          </div>
-        );
+        // ADDED: Strength & Power Instructions
+        return <StrengthPowerInstructions onProceed={nextStep} />;
 
       case 4:
+        // ADDED: Strength & Power Assessment
+        return <StrengthPowerForm onComplete={nextStep} />;
+      case 5:
+        return <SpeedAgilityInstructions onProceed={nextStep} />;
+
+      case 6:
+        return <SpeedAndAgilityForm onComplete={nextStep} />;
+
+      case 7:
+        return <StaminaRecoveryInstructions onProceed={nextStep} />;
+
+      case 8:
+        return <StaminaAndRecoveryForm onComplete={nextStep} />;
+      case 9:
+        // ADDED: Injury Records
+        return <InjuryManagement onComplete={nextStep} />;
+
+      case 10:
         return (
           <div className="flex flex-col items-center justify-center gap-4 py-12">
-            <h3 className="text-lg font-semibold">
-              Strength & Power Assessment
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Coming in next phase
-            </p>
+            <ReviewAndSubmit />;
           </div>
         );
 

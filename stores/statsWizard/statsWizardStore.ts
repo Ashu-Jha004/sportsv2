@@ -2,52 +2,6 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type {
-  BasicPhysicalMeasurements,
-  CountermovementJumpTest,
-  LoadedSquatJumpTest,
-  DepthJumpTest,
-  BallisticBenchPressTest,
-  BallisticPushUpTest,
-  PushUpTest,
-  DeadliftVelocityTest,
-  BarbellHipThrustTest,
-  WeightedPullUpTest,
-  BarbellRowTest,
-  PlankHoldTest,
-  PullUpsTest,
-  TenMeterSprintTest,
-  FourtyMeterDashTest,
-  RepeatedSprintAbilityTest,
-  Five05AgilityTest,
-  TTestAgility,
-  IllinoisAgilityTest,
-  VisualReactionSpeedDrill,
-  LongJumpTest,
-  ReactiveAgilityTTest,
-  StandingLongJumpTest,
-  BeepTest,
-  YoYoTest,
-  CooperTest,
-  PeakHeartRate,
-  RestingHeartRate,
-  RestingHeartRateVariability,
-  LactateThreshold,
-  AnaerobicCapacity,
-  PostExerciseHeartRateRecovery,
-  SitAndReachTest,
-  ActiveStraightLegRaise,
-  ShoulderRotation,
-  KneeToWallTest,
-  VO2Max,
-  FlexibilityAssessment,
-  AnthropometricData,
-  InjuryRecord,
-  StrengthAndPowerScores,
-  SpeedAndAgilityScores,
-  StaminaAndRecoveryScores,
-  CompleteStatsPayload,
-} from "@/types/stats/athlete-stats.types";
 
 // ============================================
 // WIZARD STEP CONFIGURATION
@@ -555,6 +509,9 @@ export const useStatsWizardStore = create<any>()(
 
         // Instruction steps can always proceed
         if (currentStepConfig?.type === "instruction") {
+          return true;
+        }
+        if (currentStepConfig?.type === "form") {
           return true;
         }
 

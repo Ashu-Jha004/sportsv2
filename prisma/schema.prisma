@@ -157,7 +157,9 @@ model InjuryStat {
   severity     String
   occurredAt   DateTime
   recoveryTime Int?
+  expectedRecoveryDate DateTime?
   recoveredAt  DateTime?
+  treatmentPlan String?
   status       String    @default("active")
   notes        String?
   createdAt    DateTime  @default(now())
@@ -367,6 +369,7 @@ model Notification {
 // Notification categories
 enum NotificationType {
   STAT_UPDATE_REQUEST
+  EVALUATION_COMPLETED
   STAT_UPDATE_APPROVED
   APPLICATION_SUBMITTED
   APPLICATION_APPROVED
