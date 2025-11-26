@@ -38,7 +38,12 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
 
     const guide = await prisma.guide.findUnique({
       where: { userId: guideAthlete.id, id: input.guideId },
-      select: { id: true, status: true, userId: true },
+      select: {
+        id: true,
+        status: true,
+        userId: true,
+        user: { select: { username: true } },
+      },
     });
 
     if (!guide || guide.status !== "approved") {
@@ -101,6 +106,9 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
           calfCircumference: input.payload.basicMeasurements.calfCircumference,
           thighCircumference:
             input.payload.basicMeasurements.thighCircumference,
+          lastUpdatedAt: new Date(),
+          lastUpdatedByName: guide.user.username,
+          lastUpdatedBy: guide.userId,
         },
         update: {
           height: input.payload.basicMeasurements.height,
@@ -118,6 +126,9 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
           calfCircumference: input.payload.basicMeasurements.calfCircumference,
           thighCircumference:
             input.payload.basicMeasurements.thighCircumference,
+          lastUpdatedAt: new Date(),
+          lastUpdatedByName: guide.user.username,
+          lastUpdatedBy: guide.userId,
         },
       });
 
