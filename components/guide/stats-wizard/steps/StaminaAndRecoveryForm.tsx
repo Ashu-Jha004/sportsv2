@@ -16,8 +16,7 @@ import { useStatsWizardStore } from "@/stores/statsWizard/statsWizardStore";
 import { BeepTestForm } from "./stamina-tests/BeepTestForm";
 import { YoYoTestForm } from "./stamina-tests/YoYoTestForm";
 import { CooperTestForm } from "./stamina-tests/CooperTestForm";
-import { HeartRateMetricsForm } from "./stamina-tests/HeartRateMetricsForm";
-import { SitAndReachForm } from "./SitAndReachForm";
+import { SitAndReachTestForm } from "./SitAndReachForm";
 
 export function StaminaAndRecoveryForm({
   onComplete,
@@ -34,7 +33,6 @@ export function StaminaAndRecoveryForm({
     beepTest: !!staminaAndRecovery.Beep_Test,
     yoYoTest: !!staminaAndRecovery.Yo_Yo_Test,
     cooperTest: !!staminaAndRecovery.Cooper_Test,
-    heartRateMetrics: !!staminaAndRecovery.Heart_Rate_Metrics,
     sitAndReach: !!staminaAndRecovery.Sit_And_Reach,
   });
 
@@ -42,7 +40,6 @@ export function StaminaAndRecoveryForm({
     beepTest: "Beep_Test",
     yoYoTest: "Yo_Yo_Test",
     cooperTest: "Cooper_Test",
-    heartRateMetrics: "Heart_Rate_Metrics",
     sitAndReach: "Sit_And_Reach",
   };
 
@@ -159,30 +156,6 @@ export function StaminaAndRecoveryForm({
         </AccordionItem>
 
         <AccordionItem
-          value="Heart_Rate_Metrics"
-          className="rounded-lg border bg-card"
-        >
-          <AccordionTrigger className="px-6 py-4">
-            <div className="flex items-center gap-3">
-              {completion.heartRateMetrics ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
-              <span className="font-semibold text-foreground">
-                Heart Rate Metrics
-              </span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <HeartRateMetricsForm
-              initialData={staminaAndRecovery.Heart_Rate_Metrics || undefined}
-              onSave={(data) => handleTestSave("heartRateMetrics", data)}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem
           value="Sit_And_Reach"
           className="rounded-lg border bg-card"
         >
@@ -199,7 +172,7 @@ export function StaminaAndRecoveryForm({
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-6">
-            <SitAndReachForm
+            <SitAndReachTestForm
               initialData={staminaAndRecovery.Sit_And_Reach || undefined}
               onSave={(data) => handleTestSave("sitAndReach", data)}
             />

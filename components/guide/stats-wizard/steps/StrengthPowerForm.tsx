@@ -12,14 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, Circle, Info, Loader2 } from "lucide-react";
 import { useStatsWizardStore } from "@/stores/statsWizard/statsWizardStore";
-import { CountermovementJumpForm } from "./strength-tests/CountermovementJumpForm";
 import { calculateStrengthScore } from "@/lib/calculations/stats-calculations";
+
+import { CountermovementJumpForm } from "./strength-tests/CountermovementJumpForm";
+import { LoadedSquatJumpForm } from "./strength-tests/LoadedSquatJump";
+import { DepthJumpForm } from "./strength-tests/DepthJumpForm";
+import { BallisticBenchPressForm } from "./strength-tests/BallisticBenchPressForm";
+import { BallisticPushUpsForm } from "./strength-tests/BallisticPushUpsForm";
 import { PushUpsTestForm } from "./strength-tests/PushUpsTestForm";
 import { PullUpsTestForm } from "./strength-tests/PullUpsTestForm";
 import { PlankHoldForm } from "./strength-tests/PlankHoldForm";
 import { DeadliftVelocityForm } from "./strength-tests/DeadliftVelocityForm";
 import { BarbellHipThrustForm } from "./strength-tests/BarbellHipThrustForm";
-import { WeightedPullUpsForm } from "./strength-tests/WeightedPullUpsForm";
 import { BarbellRowForm } from "./strength-tests/BarbellRowForm";
 type StrengthPowerFormProps = {
   onComplete: () => void;
@@ -37,7 +41,6 @@ type TestCompletionStatus = {
   hipThrust: boolean;
   pullUp: boolean;
   barbellRow: boolean;
-  weightedPullUps: boolean;
   plank: boolean;
   bodyweightPullUps: boolean;
 };
@@ -67,7 +70,6 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
     pullUp: !!strengthAndPower.Weighted_Pull_up,
     barbellRow: !!strengthAndPower.Barbell_Row,
     plank: !!strengthAndPower.Plank_Hold,
-    weightedPullUps: !!strengthAndPower.Weighted_Pull_up,
     bodyweightPullUps: !!strengthAndPower.pullUps,
   });
 
@@ -226,7 +228,12 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-6">
             <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              Form component coming in next iteration
+              <LoadedSquatJumpForm
+                initialData={strengthAndPower.Loaded_Squat_Jump || undefined}
+                onSave={(data: any) =>
+                  handleTestSave("Loaded_Squat_Jump", "loadedJump", data)
+                }
+              />
             </div>
           </AccordionContent>
         </AccordionItem>
@@ -253,12 +260,18 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-6">
             <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              Form component coming in next iteration
+              <DepthJumpForm
+                initialData={strengthAndPower.Depth_Jump || undefined}
+                onSave={(data: any) =>
+                  handleTestSave("Depth_Jump", "depthJump", data)
+                }
+              />
             </div>
           </AccordionContent>
         </AccordionItem>
 
         {/* 4. Ballistic Bench Press - Placeholder */}
+        {/* Ballistic Bench Press */}
         <AccordionItem
           value="Ballistic_Bench_Press"
           className="rounded-lg border bg-card"
@@ -275,7 +288,7 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
                   Ballistic Bench Press
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Upper body explosive power
+                  Upper body explosive power (velocity–load profiling)
                 </p>
               </div>
               <Badge variant="outline" className="ml-auto text-xs">
@@ -284,27 +297,35 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
             </div>
           </AccordionTrigger>
           <AccordionContent className="px-6 pb-6">
-            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              Form component coming in next iteration
-            </div>
+            <BallisticBenchPressForm
+              initialData={strengthAndPower.Ballistic_Bench_Press || undefined}
+              onSave={(data) =>
+                handleTestSave("Ballistic_Bench_Press", "ballisticBench", data)
+              }
+            />
           </AccordionContent>
         </AccordionItem>
 
-        {/* 5. Standard Push-Ups - Placeholder */}
-        <AccordionItem value="Push_Up" className="rounded-lg border bg-card">
+        {/* Add more test accordions here... */}
+
+        {/* Ballistic Push-Ups Test */}
+        <AccordionItem
+          value="Ballistic_Push_Up"
+          className="rounded-lg border bg-card"
+        >
           <AccordionTrigger className="px-6 py-4 hover:no-underline">
             <div className="flex items-center gap-3">
-              {completion.pushUp ? (
+              {completion.ballisticPushUp ? (
                 <CheckCircle2 className="h-5 w-5 text-emerald-600" />
               ) : (
                 <Circle className="h-5 w-5 text-muted-foreground" />
               )}
               <div className="text-left">
                 <p className="font-semibold text-foreground">
-                  Standard Push-Ups
+                  Ballistic Push-Ups Test
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Upper body endurance
+                  Measures upper-body explosive power using jump push-ups
                 </p>
               </div>
               <Badge variant="outline" className="ml-auto text-xs">
@@ -312,14 +333,16 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
               </Badge>
             </div>
           </AccordionTrigger>
+
           <AccordionContent className="px-6 pb-6">
-            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              Form component coming in next iteration
-            </div>
+            <BallisticPushUpsForm
+              initialData={strengthAndPower.Ballistic_Push_Up || undefined}
+              onSave={(data) =>
+                handleTestSave("Ballistic_Push_Up", "ballisticPushUp", data)
+              }
+            />
           </AccordionContent>
         </AccordionItem>
-
-        {/* Add more test accordions here... */}
 
         {/* Push-Ups Test */}
         <AccordionItem value="Push_Up" className="rounded-lg border bg-card">
@@ -475,41 +498,6 @@ export function StrengthPowerForm({ onComplete }: StrengthPowerFormProps) {
               initialData={strengthAndPower.Barbell_Hip_Thrust || undefined}
               onSave={(data) =>
                 handleTestSave("Barbell_Hip_Thrust", "hipThrust", data)
-              }
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Weighted Pull-Ups Test */}
-        <AccordionItem
-          value="Weighted_Pull_up"
-          className="rounded-lg border bg-card"
-        >
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3">
-              {completion.weightedPullUps ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
-              <div className="text-left">
-                <p className="font-semibold text-foreground">
-                  Weighted Pull-Ups Test
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Upper body pulling strength with added weight.
-                </p>
-              </div>
-              <Badge variant="outline" className="ml-auto text-xs">
-                Optional
-              </Badge>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <WeightedPullUpsForm
-              initialData={strengthAndPower.Weighted_Pull_up || undefined}
-              onSave={(data) =>
-                handleTestSave("Weighted_Pull_up", "weightedPullUps", data)
               }
             />
           </AccordionContent>

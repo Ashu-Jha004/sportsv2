@@ -392,7 +392,7 @@ export async function verifyStatsUpdateOtpAction(
       where: {
         guideId: guide.id,
         OTP: Number(otp),
-        status: "ACCEPTED"
+        status: "ACCEPTED",
       },
       select: {
         id: true,

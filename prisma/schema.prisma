@@ -125,12 +125,20 @@ model Stats {
   id        String  @id @default(uuid())
   athlete   Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
   athleteId String  @unique
+
   height    Float?
   weight    Float?
   age       Int?
   bodyFat   Float?
-
+  waistCircumference Float?
+  neckCircumference  Float?
+  calfCircumference  Float?
+  bicepsCircumference Float?
+  thighCircumference  Float?
+  armSpan          Float?
+  legLength        Float?
   bodyMassIndex     Float?
+
   injuries          InjuryStat[]         @relation("InjuryStats")
   strength          StrengthAndPower[]   @relation("StrengthAndPowerRelation")
   speed             SpeedAndAgility[]    @relation("SpeedAndAgilityRelation")
@@ -173,30 +181,16 @@ model StaminaAndRecovery {
   id                         String @id @default(uuid())
   statId                     String
   stats                      Stats  @relation("StaminaAndRecoveryRelation", fields: [statId], references: [id], onDelete: Cascade)
-  vo2Max                     Float?
-  flexibility                Json?
-  overallFlexibilityScore    Float?
-  cardiovascularFitnessScore Float?
-  recoveryEfficiencyScore    Float?
 
-  // Anthropometric data
-  anthropometricData Json?
 
   //updated field names to be more descriptive
   Beep_Test                           Json?
   Yo_Yo_Test                          Json?
   Cooper_Test                         Json?
-  Peak_Heart_Rate                     Json?
-  Resting_Heart_Rate                  Json?
-  Resting_Heart_Rate_Variability      Json?
-  Lactate_Threshold                   Json?
-  Anaerobic_Capacity                  Json?
-  Post_Exercise_Heart_Rate_Recovery   Json?
+
   Sit_and_Reach_Test                  Json?
-  Active_Straight_Leg_Raise           Json?
-  Shoulder_External_Internal_Rotation Json?
-  Knee_to_Wall_Test                   Json?
-  recoveryTime                        Float?
+
+
   createdAt                           DateTime @default(now())
   updatedAt                           DateTime @updatedAt
 
@@ -208,24 +202,18 @@ model SpeedAndAgility {
   id                          String @id @default(uuid())
   statId                      String
   stats                       Stats  @relation("SpeedAndAgilityRelation", fields: [statId], references: [id], onDelete: Cascade)
-  sprintSpeed                 Float?
   //updated field names to be more descriptive
   Ten_Meter_Sprint            Json?
   Fourty_Meter_Dash           Json?
   Repeated_Sprint_Ability     Json?
-  Five_0_Five_Agility_Test    Json?
-  T_Test                      Json?
+
+
   Illinois_Agility_Test       Json?
   Visual_Reaction_Speed_Drill Json?
-  Long_Jump                   Json?
+ 
   Reactive_Agility_T_Test     Json?
   Standing_Long_Jump          Json?
 
-  acceleration Json?
-  agility      Json?
-  reactionTime Json?
-  balance      Json?
-  coordination Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -240,7 +228,6 @@ model StrengthAndPower {
 
   // Test metadata
   testDate          DateTime? @default(now())
-  athleteBodyWeight Float? // kg - needed for calculations
 
   // ============================================
   // JUMP TESTS (JSON - stores full test data with attempts)
@@ -272,12 +259,6 @@ model StrengthAndPower {
   // ENDURANCE/STABILITY TESTS (JSON)
   // ============================================
   Plank_Hold Json? // PlankHoldTest
-  pullUps    Json? // PullUpsTest (bodyweight)
-
-  // ============================================
-  // LEGACY FIELD (backward compatibility)
-  // ============================================
-  Pushups Int? // Simple count for backward compatibility
 
   // ============================================
   // CALCULATED SCORES (0-100 scale)

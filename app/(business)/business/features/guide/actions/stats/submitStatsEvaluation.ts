@@ -15,13 +15,14 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
 
   try {
     const { userId } = await auth();
+
     if (!userId) {
       if (process.env.NODE_ENV === "development") {
         console.error("[submitStatsEvaluation] Unauthenticated", { traceId });
       }
       return { success: false, error: "Authentication required", traceId };
     }
-
+    //checking if guide has athlete profile or not.
     const guideAthlete = await prisma.athlete.findUnique({
       where: { clerkUserId: userId },
       select: { id: true },
@@ -44,6 +45,7 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
       return { success: false, error: "Guide not authorized", traceId };
     }
 
+    //checking if athlete has athlete profile or not.
     const athlete = await prisma.athlete.findUnique({
       where: { clerkUserId: input.athleteClerkUserId },
       select: { id: true, clerkUserId: true },
@@ -52,7 +54,7 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
     if (!athlete) {
       return { success: false, error: "Athlete not found", traceId };
     }
-
+    //checking if evaluation request is valid or not for this athlete.
     const evaluationRequest = await prisma.physicalEvaluationRequest.findFirst({
       where: {
         id: input.requestId,
@@ -77,7 +79,7 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
         guideId: guide.id,
       });
     }
-
+    //transaction to ensure all-or-nothing data integrity for multiple related operations.
     const result = await prisma.$transaction(async (tx) => {
       // 1. Create or update Stats record
       const stats = await tx.stats.upsert({
@@ -89,6 +91,16 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
           age: input.payload.basicMeasurements.age,
           bodyFat: input.payload.basicMeasurements.bodyFat,
           bodyMassIndex: input.payload.basicMeasurements.bodyMassIndex,
+          neckCircumference: input.payload.basicMeasurements.neckCircumference, // ✅ ADDED
+          waistCircumference:
+            input.payload.basicMeasurements.waistCircumference, // ✅ ADDED
+          armSpan: input.payload.basicMeasurements.armSpan,
+          legLength: input.payload.basicMeasurements.legLength,
+          bicepsCircumference:
+            input.payload.basicMeasurements.bicepsCircumference,
+          calfCircumference: input.payload.basicMeasurements.calfCircumference,
+          thighCircumference:
+            input.payload.basicMeasurements.thighCircumference,
         },
         update: {
           height: input.payload.basicMeasurements.height,
@@ -96,6 +108,16 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
           age: input.payload.basicMeasurements.age,
           bodyFat: input.payload.basicMeasurements.bodyFat,
           bodyMassIndex: input.payload.basicMeasurements.bodyMassIndex,
+          neckCircumference: input.payload.basicMeasurements.neckCircumference, // ✅ ADDED
+          waistCircumference:
+            input.payload.basicMeasurements.waistCircumference, // ✅ ADDED
+          armSpan: input.payload.basicMeasurements.armSpan,
+          legLength: input.payload.basicMeasurements.legLength,
+          bicepsCircumference:
+            input.payload.basicMeasurements.bicepsCircumference,
+          calfCircumference: input.payload.basicMeasurements.calfCircumference,
+          thighCircumference:
+            input.payload.basicMeasurements.thighCircumference,
         },
       });
 
@@ -122,8 +144,6 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
               .Weighted_Pull_up as any,
             Barbell_Row: input.payload.strengthAndPower.Barbell_Row as any,
             Plank_Hold: input.payload.strengthAndPower.Plank_Hold as any,
-            pullUps: input.payload.strengthAndPower.pullUps as any,
-            Pushups: input.payload.strengthAndPower.Pushups,
             muscleMass: input.payload.strengthAndPower.scores?.muscleMass,
             enduranceStrength:
               input.payload.strengthAndPower.scores?.enduranceStrength,
@@ -144,22 +164,14 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
               .Fourty_Meter_Dash as any,
             Repeated_Sprint_Ability: input.payload.speedAndAgility
               .Repeated_Sprint_Ability as any,
-            Five_0_Five_Agility_Test: input.payload.speedAndAgility
-              .Five_0_Five_Agility_Test as any,
-            T_Test: input.payload.speedAndAgility.T_Test as any,
             Illinois_Agility_Test: input.payload.speedAndAgility
               .Illinois_Agility_Test as any,
             Visual_Reaction_Speed_Drill: input.payload.speedAndAgility
               .Visual_Reaction_Speed_Drill as any,
-            Long_Jump: input.payload.speedAndAgility.Long_Jump as any,
             Reactive_Agility_T_Test: input.payload.speedAndAgility
               .Reactive_Agility_T_Test as any,
             Standing_Long_Jump: input.payload.speedAndAgility
               .Standing_Long_Jump as any,
-            sprintSpeed: input.payload.speedAndAgility.scores?.sprintSpeed,
-            acceleration: input.payload.speedAndAgility.scores?.acceleration,
-            agility: input.payload.speedAndAgility.scores?.agility,
-            reactionTime: input.payload.speedAndAgility.scores?.reactionTime,
           },
         });
       }
@@ -172,38 +184,8 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
             Beep_Test: input.payload.staminaAndRecovery.Beep_Test as any,
             Yo_Yo_Test: input.payload.staminaAndRecovery.Yo_Yo_Test as any,
             Cooper_Test: input.payload.staminaAndRecovery.Cooper_Test as any,
-            Resting_Heart_Rate: input.payload.staminaAndRecovery
-              .Heart_Rate_Metrics as any,
             Sit_and_Reach_Test: input.payload.staminaAndRecovery
               .Sit_And_Reach as any,
-            Peak_Heart_Rate: input.payload.staminaAndRecovery
-              .Peak_Heart_Rate as any,
-            recoveryTime: input.payload.staminaAndRecovery
-              .Resting_Heart_Rate as any,
-            Resting_Heart_Rate_Variability: input.payload.staminaAndRecovery
-              .Resting_Heart_Rate_Variability as any,
-            Lactate_Threshold: input.payload.staminaAndRecovery
-              .Lactate_Threshold as any,
-            Anaerobic_Capacity: input.payload.staminaAndRecovery
-              .Anaerobic_Capacity as any,
-            Post_Exercise_Heart_Rate_Recovery: input.payload.staminaAndRecovery
-              .Post_Exercise_Heart_Rate_Recovery as any,
-            Active_Straight_Leg_Raise: input.payload.staminaAndRecovery
-              .Active_Straight_Leg_Raise as any,
-            Shoulder_External_Internal_Rotation: input.payload
-              .staminaAndRecovery.Shoulder_External_Internal_Rotation as any,
-            Knee_to_Wall_Test: input.payload.staminaAndRecovery
-              .Knee_to_Wall_Test as any,
-            vo2Max: input.payload.staminaAndRecovery.vo2Max as any,
-            flexibility: input.payload.staminaAndRecovery.flexibility as any,
-            anthropometricData: input.payload.staminaAndRecovery
-              .anthropometricData as any,
-            cardiovascularFitnessScore:
-              input.payload.staminaAndRecovery.scores?.cardiovascularFitness,
-            recoveryEfficiencyScore:
-              input.payload.staminaAndRecovery.scores?.recoveryEfficiency,
-            overallFlexibilityScore:
-              input.payload.staminaAndRecovery.scores?.overallFlexibility,
           },
         });
       }
@@ -243,6 +225,14 @@ export async function submitStatsEvaluation(input: any): Promise<any> {
         },
       });
 
+      await tx.physicalEvaluationRequest.delete({
+        where: {
+          id: input.requestId,
+          guideId: input.guideId,
+          athleteId: athlete.id,
+          status: "ACCEPTED",
+        },
+      });
       return { statsId: stats.id };
     });
 

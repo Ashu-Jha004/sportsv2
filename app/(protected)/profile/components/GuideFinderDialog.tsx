@@ -17,6 +17,7 @@ import { useUser } from "@clerk/nextjs";
 import { useGuideEvaluationStatuses } from "../hooks/profile/useGuideEvaluationStatuses";
 import { Link } from "lucide-react";
 import { redirect } from "next/navigation";
+import { toast } from "sonner";
 export function GuideFinderDialog() {
   const {
     open,
@@ -82,8 +83,12 @@ export function GuideFinderDialog() {
     try {
       await createRequest.mutateAsync({ guideId });
       setRequestedGuideIds((prev) => new Set(prev).add(guideId));
+      toast.success("Evaluation request sent successfully.");
       setFeedback("Evaluation request sent successfully.");
     } catch (err) {
+      toast.error(
+        "Could not send request. You may already have an active request with this guide."
+      );
       setFeedback(
         "Could not send request. You may already have an active request with this guide."
       );
@@ -91,8 +96,6 @@ export function GuideFinderDialog() {
   };
 
   const isLoading = nearestMutation.isPending;
-
-  console.log(guides);
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && closeDialog()}>
@@ -149,16 +152,15 @@ export function GuideFinderDialog() {
               {isLoading ? "Finding guides..." : "Use my location"}
             </Button>
 
-              <Button
-                type="button"
-                size="sm"
-                className="ml-auto"
-                disabled={isLoading}
-                onClick={()=>redirect("/profile/Evaluation")}
-              >
-                {isLoading ? "Opening..." : "Open"}
-              </Button>
-          
+            <Button
+              type="button"
+              size="sm"
+              className="ml-auto"
+              disabled={isLoading}
+              onClick={() => redirect("/profile/Evaluation")}
+            >
+              {isLoading ? "Opening..." : "Open"}
+            </Button>
           </div>
 
           {geoError && <p className="text-xs text-red-500">{geoError}</p>}

@@ -14,12 +14,10 @@ import { CheckCircle2, Circle, Zap } from "lucide-react";
 import { useStatsWizardStore } from "@/stores/statsWizard/statsWizardStore";
 import { TenMeterSprintForm } from "./speed-tests/TenMeterSprintForm";
 import { FortyMeterDashForm } from "./speed-tests/FortyMeterDashForm";
-import { FiveZeroFiveTestForm } from "./speed-tests/FiveZeroFiveTestForm";
-import { TTestForm } from "./speed-tests/TTestForm";
 import { IllinoisAgilityForm } from "./speed-tests/IllinoisAgilityForm";
 import { VisualReactionSpeedForm } from "./speed-tests/VisualReactionSpeedForm";
-import { LongJumpForm } from "./speed-tests/LongJumpForm";
 import { ReactiveAgilityTTestForm } from "./speed-tests/ReactiveAgilityTTestForm";
+import { RepeatedSprintAbilityForm } from "./speed-tests/RepeatedSprintAbility";
 import { StandingLongJumpForm } from "./speed-tests/StandingLongJumpForm";
 export function SpeedAndAgilityForm({
   onComplete,
@@ -35,61 +33,143 @@ export function SpeedAndAgilityForm({
   const [completion, setCompletion] = useState<{
     tenMeterSprint: boolean;
     fortyMeterDash: boolean;
-    fiveZeroFive: boolean;
-    tTest: boolean;
+    repeatedSprintAbility: boolean;
     illinoisAgility: boolean;
     visualReactionSpeed: boolean;
-    longJump: boolean;
     reactiveAgility: boolean;
     standingLongJump: boolean;
   }>({
     tenMeterSprint: !!speedAndAgility.Ten_Meter_Sprint,
     fortyMeterDash: !!speedAndAgility.Fourty_Meter_Dash,
-    fiveZeroFive: !!speedAndAgility.Five_0_Five_Agility_Test,
-    tTest: !!speedAndAgility.T_Test,
+    repeatedSprintAbility: !!speedAndAgility.Repeated_Sprint_Ability,
     illinoisAgility: !!speedAndAgility.Illinois_Agility_Test,
     visualReactionSpeed: !!speedAndAgility.Visual_Reaction_Speed_Drill,
-    longJump: !!speedAndAgility.Long_Jump,
     reactiveAgility: !!speedAndAgility.Reactive_Agility_T_Test,
-    standingLongJump: !!speedAndAgility.StandingLongJump,
+    standingLongJump: !!speedAndAgility.Standing_Long_Jump, // ✅ FIXED: Was StandingLongJump
   });
 
-  const handleTestSave = (testName: keyof typeof completion, data: any) => {
-    updateSpeedTest(
-      testName === "tenMeterSprint" ? "Ten_Meter_Sprint" : "",
-      testName === "fortyMeterDash" ? "Fourty_Meter_Dash" : "",
-      testName === "tTest" ? "T_Test" : "",
-      testName === "fiveZeroFive" ? "Five_0_Five_Agility_Test" : "",
-      testName === "illinoisAgility" ? "Illinois_Agility" : "",
-      testName === "longJump" ? "Long_Jump" : "",
-      testName === "visualReactionSpeed" ? "Visual_Reaction_Speed" : "",
+  // ✅ ADDED: Mapping helper to convert camelCase to store keys
+  const testNameMapping: Record<keyof typeof completion, string> = {
+    tenMeterSprint: "Ten_Meter_Sprint",
+    fortyMeterDash: "Fourty_Meter_Dash",
+    repeatedSprintAbility: "Repeated_Sprint_Ability",
+    illinoisAgility: "Illinois_Agility_Test",
+    visualReactionSpeed: "Visual_Reaction_Speed_Drill",
+    reactiveAgility: "Reactive_Agility_T_Test",
+    standingLongJump: "Standing_Long_Jump",
+  };
 
-      data
-    );
+  // ✅ FIXED: Proper function signature and logic
+  const handleTestSave = (testName: keyof typeof completion, data: any) => {
+    const storeTestName = testNameMapping[testName];
+
+    // Call updateSpeedTest with correct parameters
+    updateSpeedTest(storeTestName, data);
+
+    // Mark test as completed
     setCompletion((prev) => ({ ...prev, [testName]: true }));
-    setOpenItems((prev) =>
-      prev.filter(
-        (item) =>
-          item !== (testName === "tenMeterSprint" ? "Ten_Meter_Sprint" : "")
-      )
-    );
+
+    // Remove from open items using the correct store name
+    setOpenItems((prev) => prev.filter((item) => item !== storeTestName));
+
+    if (process.env.NODE_ENV === "development") {
+      console.debug(`[SpeedAgilityForm] Saved test: ${storeTestName}`, data);
+    }
   };
 
   const completedCount = Object.values(completion).filter(Boolean).length;
   const totalTests = Object.keys(completion).length;
 
+  // ✅ IMPROVED: Calculate real scores based on completed tests
   const handleSubmit = () => {
-    // Example: Calculate and save scores here (TODO: implement score calculation)
-    updateSpeedScores({
-      sprintSpeed: 80, // Placeholder
-      acceleration: 70, // Placeholder
-      agility: 75, // Placeholder
-      reactionTime: 85, // Placeholder
+    // Calculate actual scores from test data
+    const scores = calculateSpeedScores({
+      tenMeterSprint: speedAndAgility.Ten_Meter_Sprint,
+      fortyMeterDash: speedAndAgility.Fourty_Meter_Dash,
+      repeatedSprintAbility: speedAndAgility.Repeated_Sprint_Ability,
+      illinoisAgility: speedAndAgility.Illinois_Agility_Test,
+      visualReactionSpeed: speedAndAgility.Visual_Reaction_Speed_Drill,
+      reactiveAgility: speedAndAgility.Reactive_Agility_T_Test,
+      standingLongJump: speedAndAgility.Standing_Long_Jump,
     });
 
+    updateSpeedScores(scores);
     markStepComplete(6); // Step 6 is Speed & Agility
     onComplete();
+
+    if (process.env.NODE_ENV === "development") {
+      console.info("[SpeedAgilityForm] Submitted with scores:", scores);
+    }
   };
+
+  // ✅ ADDED: Score calculation function
+  function calculateSpeedScores(tests: any): {
+    sprintSpeed: number;
+    acceleration: number;
+    agility: number;
+    reactionTime: number;
+  } {
+    let sprintSpeed = 0;
+    let acceleration = 0;
+    let agility = 0;
+    let reactionTime = 0;
+    let sprintCount = 0;
+    let agilityCount = 0;
+
+    // Sprint Speed: 10m and 40m sprints
+    if (tests.tenMeterSprint?.calculated?.avgTime) {
+      const time = tests.tenMeterSprint.calculated.avgTime;
+      // Lower time = better score (invert and scale to 0-100)
+      sprintSpeed += Math.max(0, 100 - (time - 1.5) * 50);
+      sprintCount++;
+    }
+
+    if (tests.fortyMeterDash?.calculated?.avgTime) {
+      const time = tests.fortyMeterDash.calculated.avgTime;
+      sprintSpeed += Math.max(0, 100 - (time - 5.0) * 20);
+      sprintCount++;
+    }
+
+    // Acceleration: 10m sprint primarily
+    if (tests.tenMeterSprint?.calculated?.avgTime) {
+      const time = tests.tenMeterSprint.calculated.avgTime;
+      acceleration = Math.max(0, 100 - (time - 1.5) * 50);
+    }
+
+    // Agility: Illinois, Reactive T-Test
+    if (tests.illinoisAgility?.calculated?.avgTime) {
+      const time = tests.illinoisAgility.calculated.avgTime;
+      agility += Math.max(0, 100 - (time - 15) * 5);
+      agilityCount++;
+    }
+
+    if (tests.reactiveAgility?.calculated?.avgTime) {
+      const time = tests.reactiveAgility.calculated.avgTime;
+      agility += Math.max(0, 100 - (time - 10) * 8);
+      agilityCount++;
+    }
+
+    // Reaction Time: Visual Reaction Speed Drill
+    if (tests.visualReactionSpeed?.calculated?.avgTime) {
+      const time = tests.visualReactionSpeed.calculated.avgTime;
+      reactionTime = Math.max(0, 100 - (time - 0.2) * 200);
+    }
+
+    // Calculate averages
+    const finalSprintSpeed =
+      sprintCount > 0 ? Math.round(sprintSpeed / sprintCount) : 0;
+    const finalAgility =
+      agilityCount > 0 ? Math.round(agility / agilityCount) : 0;
+    const finalAcceleration = Math.round(acceleration);
+    const finalReactionTime = Math.round(reactionTime);
+
+    return {
+      sprintSpeed: Math.min(100, Math.max(0, finalSprintSpeed)),
+      acceleration: Math.min(100, Math.max(0, finalAcceleration)),
+      agility: Math.min(100, Math.max(0, finalAgility)),
+      reactionTime: Math.min(100, Math.max(0, finalReactionTime)),
+    };
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -176,82 +256,6 @@ export function SpeedAndAgilityForm({
             />
           </AccordionContent>
         </AccordionItem>
-
-        {/* 5-0-5 Test */}
-        <AccordionItem
-          value="Five_0_Five_Agility_Test"
-          className="rounded-lg border bg-card"
-        >
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3">
-              {completion.fiveZeroFive ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
-              <div className="text-left">
-                <p className="font-semibold text-foreground">
-                  5-0-5 Agility Test
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Change of direction speed test
-                </p>
-              </div>
-              <Badge variant="outline" className="ml-auto text-xs">
-                Optional
-              </Badge>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <FiveZeroFiveTestForm
-              initialData={
-                speedAndAgility.Five_0_Five_Agility_Test || undefined
-              }
-              onSave={(data) => {
-                updateSpeedTest("Five_0_Five_Agility_Test", data);
-                setCompletion((prev) => ({ ...prev, fiveZeroFive: true }));
-                setOpenItems((prev) =>
-                  prev.filter((item) => item !== "Five_0_Five_Agility_Test")
-                );
-              }}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* T-Test */}
-        <AccordionItem value="T_Test" className="rounded-lg border bg-card">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3">
-              {completion.tTest ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
-              <div className="text-left">
-                <p className="font-semibold text-foreground">T-Test</p>
-                <p className="text-xs text-muted-foreground">
-                  Multidirectional agility test
-                </p>
-              </div>
-              <Badge variant="outline" className="ml-auto text-xs">
-                Optional
-              </Badge>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <TTestForm
-              initialData={speedAndAgility.T_Test || undefined}
-              onSave={(data) => {
-                updateSpeedTest("T_Test", data);
-                setCompletion((prev) => ({ ...prev, tTest: true }));
-                setOpenItems((prev) =>
-                  prev.filter((item) => item !== "T_Test")
-                );
-              }}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
         {/* Illinois Agility Test */}
         <AccordionItem
           value="Illinois_Agility_Test"
@@ -329,40 +333,6 @@ export function SpeedAndAgilityForm({
                 }));
                 setOpenItems((prev) =>
                   prev.filter((item) => item !== "Visual_Reaction_Speed_Drill")
-                );
-              }}
-            />
-          </AccordionContent>
-        </AccordionItem>
-
-        {/* Long Jump */}
-        <AccordionItem value="Long_Jump" className="rounded-lg border bg-card">
-          <AccordionTrigger className="px-6 py-4 hover:no-underline">
-            <div className="flex items-center gap-3">
-              {completion.longJump ? (
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <Circle className="h-5 w-5 text-muted-foreground" />
-              )}
-              <div className="text-left">
-                <p className="font-semibold text-foreground">Long Jump</p>
-                <p className="text-xs text-muted-foreground">
-                  Horizontal explosive power test
-                </p>
-              </div>
-              <Badge variant="outline" className="ml-auto text-xs">
-                Optional
-              </Badge>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-6 pb-6">
-            <LongJumpForm
-              initialData={speedAndAgility.Long_Jump || undefined}
-              onSave={(data) => {
-                updateSpeedTest("Long_Jump", data);
-                setCompletion((prev) => ({ ...prev, longJump: true }));
-                setOpenItems((prev) =>
-                  prev.filter((item) => item !== "Long_Jump")
                 );
               }}
             />
@@ -448,6 +418,46 @@ export function SpeedAndAgilityForm({
         </AccordionItem>
 
         {/* Add additional speed/agility tests in similar AccordionItems here */}
+        <AccordionItem
+          value="Repeated_Sprint_Ability"
+          className="rounded-lg border bg-card"
+        >
+          <AccordionTrigger className="px-6 py-4 hover:no-underline">
+            <div className="flex items-center gap-3">
+              {completion.reactiveAgility ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground" />
+              )}
+              <div className="text-left">
+                <p className="font-semibold text-foreground">
+                  Repeated Sprint Ability
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Measures decision-making agility with reaction component
+                </p>
+              </div>
+              <Badge variant="outline" className="ml-auto text-xs">
+                Optional
+              </Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-6">
+            <RepeatedSprintAbilityForm
+              initialData={speedAndAgility.Repeated_Sprint_Ability || undefined}
+              onSave={(data) => {
+                updateSpeedTest("Repeated_Sprint_Ability", data);
+                setCompletion((prev) => ({
+                  ...prev,
+                  repeatedSprintAbility: true,
+                }));
+                setOpenItems((prev) =>
+                  prev.filter((item) => item !== "Repeated_Sprint_Ability")
+                );
+              }}
+            />
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
 
       <div className="flex justify-end">

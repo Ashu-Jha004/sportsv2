@@ -11,12 +11,8 @@ import {
   AlertCircle,
   Calendar,
   User,
-  Activity,
-  Zap,
-  Heart,
   ClipboardCheck,
   Loader2,
-  AlertTriangle,
 } from "lucide-react";
 import { useStatsWizardStore } from "@/stores/statsWizard/statsWizardStore";
 import { format } from "date-fns";
