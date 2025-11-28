@@ -1,10 +1,11 @@
 // Export all AI-related server actions and types
 "use server";
+
+export { sendChatMessage } from "./geminiChat";
+export type { GeminiChatResponse } from "./geminiChat";
+
+// Re-export utilities from the correct location
 export {
-  sendChatMessage,
   validateStatsSnapshot,
   sanitizeUserInput,
-} from "./geminiChat";
-
-// You can also re-export types if needed
-export type { GeminiChatResponse } from "../ai/geminiChat";
+} from "../../../../lib/ai/chatUtils";
