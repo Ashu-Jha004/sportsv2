@@ -3,6 +3,9 @@
 import React, { useMemo, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { StatsFallback } from "./StatsFallback";
+import { useGuideFinderStore } from "@/stores/guide/Finder/guideFinder.store";
+import { useRouter } from "next/navigation";
+
 import { Badge } from "@/components/ui/badge";
 import {
   Radar,
@@ -13,6 +16,8 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react"; // Optional: icon for the button
 
 type Attribute =
   | "Strength & Power"
@@ -31,10 +36,10 @@ function generateRandomAttributes(): Record<Attribute, number> {
   // Athlete stats always ~50-95 (less than perfect 100)
   return {
     "Strength & Power": Math.floor(50 + Math.random() * 45),
-    Speed: Math.floor(50 + Math.random() * 45),
-    Agility: Math.floor(50 + Math.random() * 45),
-    Recovery: Math.floor(50 + Math.random() * 45),
-    Flexibility: Math.floor(50 + Math.random() * 45),
+    Speed: Math.floor(30 + Math.random() * 35),
+    Agility: Math.floor(30 + Math.random() * 35),
+    Recovery: Math.floor(30 + Math.random() * 35),
+    Flexibility: Math.floor(30 + Math.random() * 35),
   };
 }
 
@@ -75,7 +80,10 @@ function CustomTooltip({ active, payload, label }: any) {
   return null;
 }
 
-export default function StatsTab({ stats }: any) {
+export default function StatsTab({ stats, username }: any) {
+  const openDialog = useGuideFinderStore((s) => s.openDialog);
+  const router = useRouter();
+
   const athleteAttributes = useMemo(() => generateRandomAttributes(), []);
 
   const data: DataPoint[] = perfectHumanDataPoints.map((point) => ({
@@ -91,10 +99,43 @@ export default function StatsTab({ stats }: any) {
     athleteValues.reduce((a, b) => a + b, 0) / athleteValues.length
   );
 
+  const handleViewDetailedReport = () => {
+    router.push(`/profile/${username}/stats`);
+  };
+
   if (stats?.hasStats === false) return <StatsFallback isSelf />;
 
   return (
-    <Card className="max-w-3xl mx-auto p-5 bg-white shadow-2xl rounded-xl border border-gray-200">
+    <Card className="max-w-3xl mx-auto p-5 flex flex-col bg-white shadow-2xl rounded-xl border border-gray-200">
+      <div className="flex justify-between items-start mb-4">
+        <div className="button flex flex-col items-start">
+          <span className="text-sm text-gray-600 mb-2">
+            Want to update your stats?
+          </span>
+          <Button
+            variant="default"
+            className="mt-1"
+            onClick={() => openDialog({ sportFilter: "primary" })}
+          >
+            Find Nearest Guide
+          </Button>
+        </div>
+
+        <div className="button flex flex-col items-end">
+          <span className="text-sm text-gray-600 mb-2">
+            View comprehensive analysis
+          </span>
+          <Button
+            variant="outline"
+            className="mt-1"
+            onClick={handleViewDetailedReport}
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            View Detailed Report
+          </Button>
+        </div>
+      </div>
+
       <CardHeader className="mb-4">
         <CardTitle className="text-2xl font-extrabold text-gray-900">
           Athlete Performance Overview

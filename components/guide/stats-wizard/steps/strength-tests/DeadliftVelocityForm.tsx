@@ -133,7 +133,7 @@ export function DeadliftVelocityForm({
   return (
     <div className="space-y-6">
       {/* INFO CARD */}
-      <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border">
+      <Card className="bg-linear-to-br from-slate-50 to-slate-100 border">
         <CardHeader>
           <CardTitle>Deadlift Velocity Test — Guide</CardTitle>
         </CardHeader>

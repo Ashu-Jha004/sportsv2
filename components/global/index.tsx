@@ -19,19 +19,19 @@ export default function LayoutShell({
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-slate-50 text-slate-900">
-      <aside className="h-screen sticky top-0">
+    <div className="h-screen flex overflow-hidden bg-slate-50 text-slate-900">
+      <aside className="h-full shrink-0 overflow-y-auto">
         <Sidebar brandName={brandName} userName={userName} menus={menus} />
       </aside>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar
           brandName={brandName}
           collapsed={collapsed}
           setCollapsed={setCollapsed}
         />
 
-        <main className="p-6 overflow-auto flex-1">{children}</main>
+        <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>
   );

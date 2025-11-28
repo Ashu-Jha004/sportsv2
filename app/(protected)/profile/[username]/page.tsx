@@ -66,18 +66,6 @@ export default function DynamicProfilePage({ params }: PageProps) {
           });
           setProfileData(data.data);
 
-          // Mock stats/media/matches as before
-          setStatsData({
-            weight: 75,
-            height: 180,
-            strength: 85,
-            speed: 78,
-            agility: 82,
-            endurance: 88,
-            power: 80,
-            flexibility: 75,
-            lastUpdated: new Date().toISOString(),
-          });
 
           setMediaData([
             {

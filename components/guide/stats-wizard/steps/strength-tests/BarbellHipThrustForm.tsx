@@ -101,7 +101,7 @@ export function BarbellHipThrustForm({ initialData, onSave }: Props) {
       {/* ----------------------
           ℹ️ INFO CARD 
       -----------------------*/}
-      <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border">
+      <Card className="bg-linear-to-br from-slate-50 to-slate-100 border">
         <CardHeader>
           <CardTitle>Barbell Hip Thrust — Test Guide</CardTitle>
         </CardHeader>

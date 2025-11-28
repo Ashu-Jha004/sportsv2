@@ -17,21 +17,19 @@ export default function Navbar({
   setCollapsed?: (v: boolean) => void;
 }) {
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-14 flex items-center justify-between gap-4">
-          {/* ✅ Search Component integrated here */}
-          <div className="flex-1 flex justify-center">
-            <AthleteSearch />
-          </div>
+    <header className=" shrink-0 sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+      <div className="h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        {/* ✅ Search Component integrated here */}
+        <div className="flex-1 flex justify-center max-w-2xl mx-auto">
+          <AthleteSearch />
+        </div>
 
-          {/* Right side icons */}
-          <div className="flex items-center gap-3">
-            <NotificationBell />
-            <Button variant="ghost" className="p-2">
-              <MessageCircle size={16} />
-            </Button>
-          </div>
+        {/* Right side icons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <NotificationBell />
+          <Button variant="ghost" size="sm" className="p-2">
+            <MessageCircle size={18} />
+          </Button>
         </div>
       </div>
     </header>

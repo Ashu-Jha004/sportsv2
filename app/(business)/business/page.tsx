@@ -19,7 +19,7 @@ const BusinessPage: NextPage = () => {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-blue-50">
         {/* Hero Welcome Section */}
         <BusinessHero />
 
@@ -27,7 +27,7 @@ const BusinessPage: NextPage = () => {
         <BusinessCard />
 
         {/* Call to Action */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-purple-600">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-linear-to-r from-blue-600 to-purple-600">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
               Ready to Start Your Athletic Business?

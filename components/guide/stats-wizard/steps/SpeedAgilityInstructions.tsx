@@ -46,7 +46,7 @@ export function SpeedAgilityInstructions({
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
-              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
               <div>
                 <p className="font-semibold text-foreground">
                   Timing Gates or Stopwatch
@@ -57,7 +57,7 @@ export function SpeedAgilityInstructions({
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
-              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
               <div>
                 <p className="font-semibold text-foreground">Cones</p>
                 <p className="text-sm text-muted-foreground">
@@ -66,7 +66,7 @@ export function SpeedAgilityInstructions({
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-lg border bg-muted/30 p-4">
-              <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-600" />
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
               <div>
                 <p className="font-semibold text-foreground">
                   Flat and Clear Field

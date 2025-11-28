@@ -100,7 +100,7 @@ export const BusinessCard = () => {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div
-                className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${service.color}`}
+                className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r ${service.color}`}
               />
 
               <div className="p-8">
@@ -158,7 +158,7 @@ export const BusinessCard = () => {
                 {/* CTA */}
                 <div
                   className={`
-                      bg-gradient-to-r ${service.color} text-white rounded-xl p-4 
+                      bg-linear-to-r ${service.color} text-white rounded-xl p-4 
                       group-hover:shadow-lg transition-all duration-300
                     `}
                 >

@@ -5,9 +5,9 @@ import React from "react";
 export const BusinessHero: React.FC = () => {
   return (
     <>
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <section className="relative overflow-hidden bg-linear-to-br from-slate-900 via-blue-900 to-indigo-900">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-linear-to-br from-blue-600/20 to-purple-600/20 mix-blend-multiply" />
           <div className="absolute inset-0 bg-black/40" />
         </div>
 
@@ -21,7 +21,7 @@ export const BusinessHero: React.FC = () => {
 
             <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
               Turn Your Athletic
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500">
+              <span className="block text-transparent bg-clip-text bg-linear-to-r from-yellow-400 via-orange-500 to-red-500">
                 Passion Into Profit
               </span>
             </h1>

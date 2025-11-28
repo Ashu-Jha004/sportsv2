@@ -9,7 +9,6 @@ import { Info, Camera, ListChecks, BarChart2 } from "lucide-react";
 import { useAthleteStats } from "../hooks/profile/useAthleteStats";
 export default function AthleteBody({
   athlete,
-  stats,
   media,
   matches,
   isOwnProfile,
@@ -67,7 +66,11 @@ export default function AthleteBody({
         <MatchTab matches={matches} isOwnProfile={isOwnProfile} />
       )}
       {activeSection === "stats" && (
-        <StatsTab stats={data} isOwnProfile={isOwnProfile} />
+        <StatsTab
+          stats={data}
+          isOwnProfile={isOwnProfile}
+          username={athlete.username}
+        />
       )}
     </section>
   );

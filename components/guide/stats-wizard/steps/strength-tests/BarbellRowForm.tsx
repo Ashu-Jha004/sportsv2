@@ -110,7 +110,7 @@ export function BarbellRowForm({
       {/* ----------------------
           ℹ️ INFO CARD 
       -----------------------*/}
-      <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border">
+      <Card className="bg-linear-to-br from-slate-50 to-slate-100 border">
         <CardHeader>
           <CardTitle>Barbell Row — Test Guide</CardTitle>
         </CardHeader>

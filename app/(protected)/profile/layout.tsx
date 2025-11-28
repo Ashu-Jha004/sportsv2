@@ -22,7 +22,7 @@ export default function RootLayout({
       userName={user?.publicMetadata?.username || ""}
       menus={MENU_ITEMS}
     >
-      {children}
+      <div className="h-full w-full overflow-auto">{children}</div>
       <GuideFinderDialog />
     </LayoutShell>
   );
