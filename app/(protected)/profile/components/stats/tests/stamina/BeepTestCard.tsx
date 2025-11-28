@@ -10,7 +10,6 @@ import { ComparisonBar } from "../../shared/ComparisonBar";
 import { InsightCard } from "../../shared/InsightCard";
 import { DetailedBreakdown } from "../../shared/DetailedBreakdown";
 import { RawDataViewer } from "../../shared/RawDataViewer";
-import { BeepTest } from "../../../../lib/utils/statsDataProcessor";
 import { Activity } from "lucide-react";
 import { formatNumber } from "@/app/(protected)/profile/lib/utils/formatting";
 import {
@@ -19,14 +18,44 @@ import {
   generateInsight,
 } from "../../../../lib/utils/performanceCalculations";
 
-export function BeepTestCard({ data, recordedAt }: any) {
+interface BeepTestCardProps {
+  data: any;
+  recordedAt: string;
+}
+
+export function BeepTestCard({ data, recordedAt }: BeepTestCardProps) {
+  // Add null checks and access calculated values
+  if (!data || !data.calculated) {
+    return (
+      <StatCard
+        title="Beep Test (Multi-Stage Fitness Test)"
+        icon={Activity}
+        iconColor="text-purple-600"
+        recordedAt={recordedAt}
+      >
+        <div className="p-4 text-center text-gray-500">
+          <p>No beep test data available</p>
+        </div>
+      </StatCard>
+    );
+  }
+
+  // Extract values from calculated object
+  const vo2Max = data.calculated.estimatedVO2Max || 0;
+  const totalDistance = data.calculated.totalDistance || 0;
+  const finalSpeed = data.calculated.finalSpeed || 0;
+  const totalShuttles = data.calculated.totalShuttles || 0;
+  const testDuration = data.calculated.totalTime || 0;
+  const levelReached = data.levelReached || 0;
+  const shuttlesInFinalLevel = data.shuttlesInFinalLevel || 0;
+
   const performanceLevel = calculatePerformanceLevel(
-    data.vo2Max,
+    vo2Max,
     "beepTest",
     "stamina"
   );
 
-  const eliteComparison = compareToElite(data.vo2Max, "beepTest", "stamina");
+  const eliteComparison = compareToElite(vo2Max, "beepTest", "stamina");
 
   const insight = generateInsight(
     "Beep Test",
@@ -42,7 +71,7 @@ export function BeepTestCard({ data, recordedAt }: any) {
     return { label: "Poor", color: "text-orange-600" };
   };
 
-  const vo2Category = getVO2MaxCategory(data.vo2Max);
+  const vo2Category = getVO2MaxCategory(vo2Max);
 
   return (
     <StatCard
@@ -65,7 +94,7 @@ export function BeepTestCard({ data, recordedAt }: any) {
               VO₂ Max
             </h5>
             <div className="text-5xl font-bold text-purple-600 mb-1">
-              {formatNumber(data.vo2Max, 1)}
+              {formatNumber(vo2Max, 1)}
             </div>
             <p className="text-xs text-purple-700">ml/kg/min</p>
           </div>
@@ -75,7 +104,7 @@ export function BeepTestCard({ data, recordedAt }: any) {
               Level Reached
             </h5>
             <div className="text-5xl font-bold text-blue-600 mb-1">
-              {data.levelReached}
+              {levelReached}
             </div>
             <p className="text-xs text-blue-700">Max level</p>
           </div>
@@ -85,7 +114,7 @@ export function BeepTestCard({ data, recordedAt }: any) {
               Shuttles
             </h5>
             <div className="text-5xl font-bold text-green-600 mb-1">
-              {data.shuttlesCompleted}
+              {totalShuttles}
             </div>
             <p className="text-xs text-green-700">Total completed</p>
           </div>
@@ -95,11 +124,11 @@ export function BeepTestCard({ data, recordedAt }: any) {
               Total Distance
             </h5>
             <div className="text-4xl font-bold text-orange-600 mb-1">
-              {formatNumber(data.totalDistance, 0)}
+              {formatNumber(totalDistance, 0)}
               <span className="text-lg">m</span>
             </div>
             <p className="text-xs text-orange-700">
-              {formatNumber(data.totalDistance / 1000, 2)} km
+              {formatNumber(totalDistance / 1000, 2)} km
             </p>
           </div>
         </div>
@@ -120,7 +149,7 @@ export function BeepTestCard({ data, recordedAt }: any) {
         <InsightCard insight={insight} />
 
         {/* VO2 Max Explanation */}
-        <div className="p-6 bg-linear-to-r from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200">
+        <div className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200">
           <h4 className="text-sm font-semibold text-purple-900 mb-3 flex items-center gap-2">
             <span>💡</span>
             Understanding VO₂ Max
@@ -134,7 +163,7 @@ export function BeepTestCard({ data, recordedAt }: any) {
             <div className="p-3 bg-white rounded-lg">
               <p className="text-xs text-gray-600 mb-1">Your VO₂ Max</p>
               <p className="text-2xl font-bold text-purple-600">
-                {formatNumber(data.vo2Max, 1)}
+                {formatNumber(vo2Max, 1)}
               </p>
             </div>
             <div className="p-3 bg-white rounded-lg">
@@ -146,6 +175,44 @@ export function BeepTestCard({ data, recordedAt }: any) {
           </div>
         </div>
 
+        {/* Additional Metrics */}
+        {data.calculated && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {data.calculated.caloriesBurned && (
+              <div className="p-3 bg-red-50 rounded-lg border border-red-200 text-center">
+                <p className="text-xs text-red-700 mb-1">Calories Burned</p>
+                <p className="text-xl font-bold text-red-600">
+                  {formatNumber(data.calculated.caloriesBurned, 0)}
+                </p>
+              </div>
+            )}
+            {data.calculated.percentileRank && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 text-center">
+                <p className="text-xs text-blue-700 mb-1">Percentile Rank</p>
+                <p className="text-xl font-bold text-blue-600">
+                  {data.calculated.percentileRank}th
+                </p>
+              </div>
+            )}
+            {data.calculated.fitnessAge && (
+              <div className="p-3 bg-green-50 rounded-lg border border-green-200 text-center">
+                <p className="text-xs text-green-700 mb-1">Fitness Age</p>
+                <p className="text-xl font-bold text-green-600">
+                  {data.calculated.fitnessAge}
+                </p>
+              </div>
+            )}
+            {data.calculated.vo2MaxRating && (
+              <div className="p-3 bg-purple-50 rounded-lg border border-purple-200 text-center">
+                <p className="text-xs text-purple-700 mb-1">Rating</p>
+                <p className="text-lg font-bold text-purple-600">
+                  {data.calculated.vo2MaxRating}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Detailed Breakdown */}
         <DetailedBreakdown
           sections={[
@@ -156,37 +223,134 @@ export function BeepTestCard({ data, recordedAt }: any) {
                 <MetricGrid columns={2} gap="md">
                   <MetricDisplay
                     label="Level Reached"
-                    value={data.levelReached}
+                    value={levelReached}
                     size="sm"
                   />
                   <MetricDisplay
                     label="Shuttles in Final Level"
-                    value={data.shuttlesInFinalLevel}
+                    value={shuttlesInFinalLevel}
                     size="sm"
                   />
                   <MetricDisplay
                     label="Total Shuttles"
-                    value={data.shuttlesCompleted}
+                    value={totalShuttles}
                     size="sm"
                   />
                   <MetricDisplay
                     label="Total Distance"
-                    value={formatNumber(data.totalDistance, 0)}
+                    value={formatNumber(totalDistance, 0)}
                     unit="m"
                     size="sm"
                   />
                   <MetricDisplay
                     label="Test Duration"
-                    value={formatNumber(data.testDuration / 60, 1)}
+                    value={formatNumber(testDuration / 60, 1)}
                     unit="min"
                     size="sm"
                   />
                   <MetricDisplay
                     label="Final Speed"
-                    value={formatNumber(data.finalSpeed, 1)}
+                    value={formatNumber(finalSpeed, 1)}
                     unit="km/h"
                     size="sm"
                   />
+                </MetricGrid>
+              ),
+            },
+            {
+              title: "Advanced Metrics",
+              icon: "📈",
+              content: (
+                <MetricGrid columns={2} gap="md">
+                  {data.calculated.metabolicEquivalent && (
+                    <MetricDisplay
+                      label="Metabolic Equivalent (METs)"
+                      value={formatNumber(
+                        data.calculated.metabolicEquivalent,
+                        1
+                      )}
+                      size="sm"
+                    />
+                  )}
+                  {data.calculated.heartRateReserve && (
+                    <MetricDisplay
+                      label="Heart Rate Reserve"
+                      value={data.calculated.heartRateReserve}
+                      unit="bpm"
+                      size="sm"
+                    />
+                  )}
+                  {data.calculated.anaerobicThreshold && (
+                    <MetricDisplay
+                      label="Anaerobic Threshold"
+                      value={formatNumber(
+                        data.calculated.anaerobicThreshold,
+                        1
+                      )}
+                      unit="ml/kg/min"
+                      size="sm"
+                    />
+                  )}
+                  {data.calculated.performanceIndex && (
+                    <MetricDisplay
+                      label="Performance Index"
+                      value={data.calculated.performanceIndex}
+                      size="sm"
+                    />
+                  )}
+                </MetricGrid>
+              ),
+            },
+            {
+              title: "Test Conditions",
+              icon: "🌡️",
+              content: (
+                <MetricGrid columns={2} gap="md">
+                  {data.surfaceType && (
+                    <MetricDisplay
+                      label="Surface"
+                      value={data.surfaceType.replace("_", " ")}
+                      size="sm"
+                    />
+                  )}
+                  {data.temperature && (
+                    <MetricDisplay
+                      label="Temperature"
+                      value={data.temperature}
+                      unit="°C"
+                      size="sm"
+                    />
+                  )}
+                  {data.altitude !== undefined && (
+                    <MetricDisplay
+                      label="Altitude"
+                      value={data.altitude}
+                      unit="m"
+                      size="sm"
+                    />
+                  )}
+                  {data.humidity !== undefined && (
+                    <MetricDisplay
+                      label="Humidity"
+                      value={data.humidity}
+                      unit="%"
+                      size="sm"
+                    />
+                  )}
+                  {data.rpeScore && (
+                    <MetricDisplay
+                      label="RPE Score"
+                      value={`${data.rpeScore}/10`}
+                      size="sm"
+                    />
+                  )}
+                  {data.testTerminationReason && (
+                    <MetricDisplay
+                      label="Test End Reason"
+                      value={data.testTerminationReason.replace("_", " ")}
+                      size="sm"
+                    />
+                  )}
                 </MetricGrid>
               ),
             },

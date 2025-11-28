@@ -16,7 +16,7 @@ import { TimelineView } from "../../components/stats/layout/TimelineView";
 import { AnthropometricSection } from "../../components/stats/sections/AnthropometricSection";
 import { StrengthSection } from "../../components/stats/sections/StrengthSection";
 import { SpeedSection } from "../../components/stats/sections/SpeedSection";
-// import { StaminaSection } from "@/components/stats/sections/StaminaSection";
+import { StaminaSection } from "../../components/stats/sections/StaminaSection";
 import { Loader2 } from "lucide-react";
 
 interface PageProps {
@@ -43,6 +43,7 @@ const StatsPage = ({ params }: PageProps) => {
   const [cleanedStats, setCleanedStats] = useState<CleanedAthleteStats | null>(
     null
   );
+  const [statsFetchAttempted, setStatsFetchAttempted] = useState(false);
 
   // Get stats store functions
   const {
@@ -50,9 +51,7 @@ const StatsPage = ({ params }: PageProps) => {
     fetchStatsByUsername,
     fetchCurrentUserStats,
     getStats,
-    isLoading: isLoadingStats,
-    hasStats,
-    getError: getStatsError,
+    getStatus, // ✅ Add getStatus
   } = useAthleteStatsStore();
 
   // Determine cache key
@@ -63,6 +62,9 @@ const StatsPage = ({ params }: PageProps) => {
     : routeUsername
     ? `username:${routeUsername}`
     : null;
+
+  // Get comprehensive status
+  const statsStatus = cacheKey ? getStatus(cacheKey) : null;
 
   // --- Profile Data Fetching ---
   useEffect(() => {
@@ -102,15 +104,27 @@ const StatsPage = ({ params }: PageProps) => {
 
   // --- Stats Fetching ---
   useEffect(() => {
-    if (!profileData) return;
+    if (!profileData || statsFetchAttempted) return;
 
     const fetchStats = async () => {
-      if (isOwnProfile) {
-        await fetchCurrentUserStats();
-      } else if (profileData.clerkUserId) {
-        await fetchStatsByAthleteId(profileData.clerkUserId);
-      } else if (routeUsername) {
-        await fetchStatsByUsername(routeUsername);
+      console.log("🔄 Fetching stats for:", {
+        isOwnProfile,
+        profileData,
+        routeUsername,
+      });
+
+      try {
+        if (isOwnProfile) {
+          await fetchCurrentUserStats();
+        } else if (profileData.clerkUserId) {
+          await fetchStatsByAthleteId(profileData.clerkUserId);
+        } else if (routeUsername) {
+          await fetchStatsByUsername(routeUsername);
+        }
+      } catch (err) {
+        console.error("❌ Stats fetch error:", err);
+      } finally {
+        setStatsFetchAttempted(true);
       }
     };
 
@@ -119,6 +133,7 @@ const StatsPage = ({ params }: PageProps) => {
     profileData,
     isOwnProfile,
     routeUsername,
+    statsFetchAttempted,
     fetchCurrentUserStats,
     fetchStatsByAthleteId,
     fetchStatsByUsername,
@@ -126,20 +141,32 @@ const StatsPage = ({ params }: PageProps) => {
 
   // --- Process Stats Data ---
   useEffect(() => {
-    if (!cacheKey) return;
+    if (!cacheKey || !statsFetchAttempted) return;
 
+    console.log("🔍 Checking stats in cache:", cacheKey);
     const rawStats = getStats(cacheKey);
-    if (rawStats) {
-      const processed = processAthleteStats(rawStats);
-      setCleanedStats(processed);
-    }
-  }, [cacheKey, getStats]);
 
-  // Get loading states
-  const statsData = cacheKey ? getStats(cacheKey) : null;
-  const statsLoading = cacheKey ? isLoadingStats(cacheKey) : false;
-  const statsError = cacheKey ? getStatsError(cacheKey) : null;
-  const hasStatsData = cacheKey ? hasStats(cacheKey) : false;
+    if (rawStats) {
+      console.log("✅ Stats found in cache, processing...");
+      try {
+        const processed = processAthleteStats(rawStats);
+        setCleanedStats(processed);
+        console.log("✅ Stats processed successfully");
+      } catch (err) {
+        console.error("❌ Error processing stats:", err);
+      }
+    } else {
+      console.log("⚠️ No stats in cache yet");
+    }
+  }, [cacheKey, statsFetchAttempted, getStats]);
+
+  // Debug logging
+  console.log("📊 Current state:", {
+    cacheKey,
+    statsStatus,
+    statsFetchAttempted,
+    hasCleanedStats: !!cleanedStats,
+  });
 
   // --- Loading State ---
   if (isLoadingProfile) {
@@ -190,9 +217,9 @@ const StatsPage = ({ params }: PageProps) => {
   }
 
   // --- Stats Loading State ---
-  if (statsLoading) {
+  if (statsStatus?.isLoading || !statsFetchAttempted) {
     return (
-      <div className="fixed inset-0 overflow-y-auto bg-linear-to-br  from-gray-50 to-blue-50">
+      <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 py-8 max-w-7xl min-h-screen">
           <StatsPageHeader
             profileData={profileData}
@@ -215,7 +242,7 @@ const StatsPage = ({ params }: PageProps) => {
   }
 
   // --- Stats Error State ---
-  if (statsError) {
+  if (statsStatus?.hasError) {
     return (
       <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 py-8 max-w-7xl min-h-screen">
@@ -230,7 +257,16 @@ const StatsPage = ({ params }: PageProps) => {
                 <h2 className="text-xl font-bold text-red-800 mb-3">
                   Error Loading Stats
                 </h2>
-                <p className="text-red-600">{statsError}</p>
+                <p className="text-red-600 mb-4">{statsStatus.error}</p>
+                <button
+                  onClick={() => {
+                    setStatsFetchAttempted(false);
+                    window.location.reload();
+                  }}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Retry
+                </button>
               </div>
             </div>
           </div>
@@ -239,8 +275,10 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
+  console.log("✅ Stats loaded successfully:", cleanedStats);
+
   // --- No Stats State ---
-  if (!hasStatsData || !statsData || !cleanedStats) {
+  if (!statsStatus?.hasData || !cleanedStats) {
     return (
       <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 to-blue-50">
         <div className="container mx-auto px-4 py-8 max-w-7xl min-h-screen">
@@ -305,7 +343,7 @@ const StatsPage = ({ params }: PageProps) => {
               <AnthropometricSection stats={cleanedStats} />
               <StrengthSection stats={cleanedStats} preview />
               <SpeedSection stats={cleanedStats} preview />
-              {/* <StaminaSection stats={cleanedStats} preview /> */}
+              <StaminaSection stats={cleanedStats} preview />
             </div>
           )}
 
@@ -321,7 +359,7 @@ const StatsPage = ({ params }: PageProps) => {
 
           {activeView === "speed" && <SpeedSection stats={cleanedStats} />}
 
-          {/* {activeView === "stamina" && <StaminaSection stats={cleanedStats} />} */}
+          {activeView === "stamina" && <StaminaSection stats={cleanedStats} />}
         </div>
 
         {/* Footer */}

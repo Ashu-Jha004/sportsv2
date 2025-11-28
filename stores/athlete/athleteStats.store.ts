@@ -159,6 +159,13 @@ interface AthleteStatsState {
     athleteId: string,
     forceRefresh?: boolean
   ) => Promise<AthleteStats | null>;
+
+  getStatus: (key: string) => {
+    isLoading: boolean;
+    hasData: boolean;
+    hasError: boolean;
+    error: string | null;
+  };
   fetchStatsByUsername: (
     username: string,
     forceRefresh?: boolean
@@ -642,9 +649,22 @@ export const useAthleteStatsStore = create<AthleteStatsState>()(
       getError: (key: string) => {
         return get().errorStates.get(key) || null;
       },
+      getStatus: (key: string) => {
+        const state = get();
+        const hasData =
+          state.statsCache.has(key) && state.statsCache.get(key) !== null;
+        const isLoading = state.loadingStates.get(key) || false;
+        const error = state.errorStates.get(key) || null;
 
+        return {
+          isLoading,
+          hasData,
+          hasError: error !== null,
+          error,
+        };
+      },
       hasStats: (key: string) => {
-        return get().hasStatsFlags.get(key) || false;
+        return get().statsCache.has(key) && get().statsCache.get(key) !== null;
       },
 
       isCacheValid: (key: string) => {

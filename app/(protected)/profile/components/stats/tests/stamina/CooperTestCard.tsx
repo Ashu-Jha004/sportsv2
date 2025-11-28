@@ -2,7 +2,6 @@
 "use client";
 
 import React from "react";
-
 import { StatCard } from "../../shared/StatCard";
 import { MetricDisplay } from "../../shared/MetricDisplay";
 import { MetricGrid } from "../../shared/MetricGrid";
@@ -25,14 +24,37 @@ interface CooperTestCardProps {
 }
 
 export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
+  // Add null checks
+  if (!data || !data.distanceMeters) {
+    return (
+      <StatCard
+        title="Cooper 12-Minute Run Test"
+        icon={Activity}
+        iconColor="text-teal-600"
+        recordedAt={recordedAt}
+      >
+        <div className="p-4 text-center text-gray-500">
+          <p>No Cooper test data available</p>
+        </div>
+      </StatCard>
+    );
+  }
+
+  // Use distanceMeters from JSON (not distanceCovered)
+  const distanceCovered = data.distanceMeters || 0;
+
+  // Calculate VO2Max using Cooper formula: (Distance in meters - 504.9) / 44.73
+  const estimatedVO2Max =
+    data.calculated?.estimatedVO2Max || (distanceCovered - 504.9) / 44.73;
+
   const performanceLevel = calculatePerformanceLevel(
-    data.distanceCovered,
+    distanceCovered,
     "cooperTest",
     "stamina"
   );
 
   const eliteComparison = compareToElite(
-    data.distanceCovered,
+    distanceCovered,
     "cooperTest",
     "stamina"
   );
@@ -43,9 +65,9 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
     eliteComparison
   );
 
-  // Calculate average pace
-  const avgPaceMinPerKm = 12 / (data.distanceCovered / 1000);
-  const avgSpeed = data.distanceCovered / 1000 / (12 / 60); // km/h
+  // Calculate average pace and speed
+  const avgPaceMinPerKm = 12 / (distanceCovered / 1000);
+  const avgSpeed = distanceCovered / 1000 / (12 / 60); // km/h
 
   return (
     <StatCard
@@ -68,11 +90,11 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
               Distance Covered
             </h5>
             <div className="text-5xl font-bold text-teal-600 mb-1">
-              {formatNumber(data.distanceCovered, 0)}
+              {formatNumber(distanceCovered, 0)}
             </div>
             <p className="text-xs text-teal-700">meters</p>
             <p className="text-sm font-semibold text-teal-600 mt-2">
-              {formatNumber(data.distanceCovered / 1000, 2)} km
+              {formatNumber(distanceCovered / 1000, 2)} km
             </p>
           </div>
 
@@ -81,7 +103,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
               Estimated VO₂ Max
             </h5>
             <div className="text-5xl font-bold text-blue-600 mb-1">
-              {formatNumber(data.estimatedVO2Max, 1)}
+              {formatNumber(estimatedVO2Max, 1)}
             </div>
             <p className="text-xs text-blue-700">ml/kg/min</p>
           </div>
@@ -123,7 +145,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
         <InsightCard insight={insight} />
 
         {/* Pacing Analysis */}
-        <div className="p-6 bg-linear-to-r from-teal-50 to-blue-50 rounded-xl border-2 border-teal-200">
+        <div className="p-6 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border-2 border-teal-200">
           <h4 className="text-sm font-semibold text-teal-900 mb-3 flex items-center gap-2">
             <span>🏃</span>
             Pacing & Efficiency
@@ -143,7 +165,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
             <div className="p-4 bg-white rounded-lg">
               <p className="text-xs text-gray-600 mb-1">Estimated VO₂ Max</p>
               <p className="text-2xl font-bold text-blue-600">
-                {formatNumber(data.estimatedVO2Max, 1)}
+                {formatNumber(estimatedVO2Max, 1)}
               </p>
               <p className="text-xs text-gray-500 mt-1">ml/kg/min</p>
             </div>
@@ -164,13 +186,13 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
                   <MetricGrid columns={2} gap="md">
                     <MetricDisplay
                       label="Distance Covered"
-                      value={formatNumber(data.distanceCovered, 0)}
+                      value={formatNumber(distanceCovered, 0)}
                       unit="m"
                       size="sm"
                     />
                     <MetricDisplay
                       label="In Kilometers"
-                      value={formatNumber(data.distanceCovered / 1000, 3)}
+                      value={formatNumber(distanceCovered / 1000, 3)}
                       unit="km"
                       size="sm"
                     />
@@ -182,7 +204,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
                     />
                     <MetricDisplay
                       label="Estimated VO₂ Max"
-                      value={formatNumber(data.estimatedVO2Max, 1)}
+                      value={formatNumber(estimatedVO2Max, 1)}
                       unit="ml/kg/min"
                       size="sm"
                     />
@@ -196,10 +218,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
                       <div className="flex justify-between">
                         <span className="text-gray-600">Per 400m:</span>
                         <span className="font-semibold">
-                          {formatNumber(
-                            (12 * 60) / (data.distanceCovered / 400),
-                            1
-                          )}
+                          {formatNumber((12 * 60) / (distanceCovered / 400), 1)}
                           s
                         </span>
                       </div>
@@ -218,6 +237,38 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
                           {formatNumber(avgPaceMinPerKm * 1.60934, 2)} min
                         </span>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Fitness Level Indicator */}
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h6 className="text-sm font-semibold text-blue-900 mb-2">
+                      Fitness Level
+                    </h6>
+                    <div className="relative h-6 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="absolute h-full bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 to-blue-500"
+                        style={{ width: "100%" }}
+                      />
+                      <div
+                        className="absolute h-full w-1 bg-black"
+                        style={{
+                          left: `${Math.min(
+                            (distanceCovered / 3500) * 100,
+                            100
+                          )}%`,
+                        }}
+                      >
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-bold whitespace-nowrap">
+                          You: {formatNumber(distanceCovered, 0)}m
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-600 mt-1">
+                      <span>1600m</span>
+                      <span>2200m</span>
+                      <span>2800m</span>
+                      <span>3500m+</span>
                     </div>
                   </div>
                 </div>
