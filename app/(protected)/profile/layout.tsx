@@ -5,6 +5,7 @@ import { MENU_ITEMS } from "@/components/global/types/types";
 import { redirect } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { GuideFinderDialog } from "./components/GuideFinderDialog";
+import { AIDialogProvider } from "@/components/ai/AIDialogProvider";
 
 export default function RootLayout({
   children,
@@ -24,6 +25,7 @@ export default function RootLayout({
     >
       <div className="h-full w-full overflow-auto">{children}</div>
       <GuideFinderDialog />
+      <AIDialogProvider />
     </LayoutShell>
   );
 }

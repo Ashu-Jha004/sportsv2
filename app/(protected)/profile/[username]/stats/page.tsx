@@ -9,6 +9,7 @@ import {
   processAthleteStats,
   type CleanedAthleteStats,
 } from "../../lib/utils/statsDataProcessor";
+import { AIHeaderMenu } from "@/components/ai/AIHeaderMenu";
 import { StatsPageHeader } from "../../components/stats/layout/StatsPageHeader";
 import { PerformanceOverview } from "../../components/stats/layout/PerformanceOverview";
 import { StatsNavigation } from "../../components/stats/layout/StatsNavigation";
@@ -321,6 +322,11 @@ const StatsPage = ({ params }: PageProps) => {
           isOwnProfile={isOwnProfile}
           stats={cleanedStats}
         />
+
+        {/* Add this after StatsPageHeader or in a logical spot */}
+        <div className="mt-4 flex justify-end">
+          <AIHeaderMenu stats={cleanedStats} />
+        </div>
 
         {/* Performance Overview Hero Section */}
         <div className="mt-8">
