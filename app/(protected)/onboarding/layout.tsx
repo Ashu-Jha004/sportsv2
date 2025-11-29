@@ -6,9 +6,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // if ((await auth()).sessionClaims?.metadata.onboardingComplete === true) {
-  //   redirect("/profile");
-  // }
+  const { metadata }: any = (await auth())?.sessionClaims;
+  if ((await auth()).sessionClaims?.metadata.onboardingComplete == true) {
+    redirect(`/profile/${metadata?.firstName}`);
+  }
 
   return <>{children}</>;
 }
