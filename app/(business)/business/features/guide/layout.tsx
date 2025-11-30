@@ -11,11 +11,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const { user } = useUser();
-  
 
   return (
     <LayoutShell
-      brandName="SportX"
+      brandName="Sparta"
       userName={user?.publicMetadata?.username || ""}
       menus={MENU_ITEMS}
     >

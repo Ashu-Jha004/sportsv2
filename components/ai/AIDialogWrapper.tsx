@@ -89,7 +89,7 @@ export function AIDialogWrapper({ children }: AIDialogWrapperProps) {
         {/* Header */}
         <header
           className={`
-            bg-gradient-to-r ${roleColors[currentRole]}
+            bg-linear-to-r ${roleColors[currentRole]}
             text-white px-4 py-3 md:px-6 md:py-4
             flex items-center justify-between
             shadow-lg
@@ -99,14 +99,14 @@ export function AIDialogWrapper({ children }: AIDialogWrapperProps) {
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
               onClick={handleClose}
-              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors shrink-0"
               aria-label="Go back"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
 
             <div className="flex items-center gap-2 min-w-0">
-              <span className="text-2xl flex-shrink-0">{roleData.icon}</span>
+              <span className="text-2xl shrink-0">{roleData.icon}</span>
               <div className="min-w-0">
                 <h1
                   id="ai-dialog-title"

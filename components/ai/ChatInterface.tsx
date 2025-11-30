@@ -183,7 +183,7 @@ export function ChatInterface() {
         {/* Messages Container */}
         <div
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto px-4 py-6 bg-gradient-to-b from-gray-50 to-white"
+          className="flex-1 overflow-y-auto px-4 py-6 bg-linear-to-b from-gray-50 to-white"
         >
           {/* Welcome Message */}
           {!hasMessages && (

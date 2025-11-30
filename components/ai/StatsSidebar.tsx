@@ -43,7 +43,7 @@ export function StatsSidebar({ stats }: StatsSidebarProps) {
 
         {/* Overall Score */}
         {stats?.overallScore != null && (
-          <div className="bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg p-4 mb-4 text-white">
+          <div className="bg-linear-to-br from-blue-500 to-purple-500 rounded-lg p-4 mb-4 text-white">
             <div className="text-sm opacity-90 mb-1">Overall Score</div>
             <div className="text-3xl font-bold">
               {stats.overallScore}
@@ -174,7 +174,7 @@ function CategoryCard({
                   className="flex justify-between text-xs text-gray-600"
                 >
                   <span className="truncate mr-2">{test.name}:</span>
-                  <span className="font-medium flex-shrink-0">
+                  <span className="font-medium shrink-0">
                     {test.value.toFixed(0)}
                   </span>
                 </div>

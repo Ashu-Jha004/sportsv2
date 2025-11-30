@@ -29,47 +29,6 @@ export type Gender = "MALE" | "FEMALE" | "OTHER";
 // ATHLETE PROFILE
 // =============================================================================
 
-export interface AthleteProfile {
-  // Identity
-  id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  profileImage: string | null;
-  bio: string | undefined | "";
-
-  // Athletic Info
-  primarySport: Sport;
-  secondarySports?: Sport[];
-  rank: Rank;
-  class: Class;
-  roles: string[];
-
-  // Location
-  city: string;
-  state: string;
-  country: string;
-  latitude?: number;
-  longitude?: number;
-
-  // Personal (own profile only)
-  email?: string;
-  dateOfBirth?: string;
-  gender: Gender;
-
-  // Social Stats
-  followersCount: number;
-  followingCount: number;
-  postsCount: number;
-
-  // Metadata
-  createdAt: string;
-  updatedAt?: string;
-  onboardingComplete: boolean;
-  isAdmin: boolean;
-  isOwnProfile: boolean;
-}
-
 // =============================================================================
 // ATHLETE STATS
 // =============================================================================
@@ -231,4 +190,49 @@ export interface ProfileStoreState {
 
   // Reset
   resetStore: () => void;
+}
+
+export interface AthleteHeaderProps {
+  athlete: AthleteProfile;
+  isOwnProfile: boolean;
+  onMessageUser?: () => void;
+  isFriendProfile?: boolean;
+}
+
+export interface AthleteProfile {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  profileImage?: string | null;
+  primarySport?: string;
+  secondarySports?: string[];
+  city?: string;
+  state?: string;
+  country?: string;
+  gender?: string;
+  roles?: string[];
+  rank?: number;
+  class?: string;
+  followersCount?: number;
+  followingCount?: number;
+  totalMatches?: number;
+  wins?: number;
+  losses?: number;
+  createdAt?: string | Date;
+  bio?: string;
+  verified?: boolean;
+}
+
+export interface AthleteSummary {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  profileImage?: string | null;
+  primarySport?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  rank?: number;
 }

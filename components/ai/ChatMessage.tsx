@@ -40,11 +40,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
       {/* Avatar */}
       <div
         className={`
-          flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
+          shrink-0 w-8 h-8 rounded-full flex items-center justify-center
           ${
             isUser
               ? "bg-blue-500 text-white"
-              : "bg-gradient-to-br from-purple-500 to-blue-500 text-white"
+              : "bg-linear-to-br from-purple-500 to-blue-500 text-white"
           }
         `}
       >
@@ -122,7 +122,7 @@ export function ChatMessageLoading() {
   return (
     <div className="flex gap-3 mb-4">
       {/* Avatar */}
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center">
+      <div className="shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-blue-500 text-white flex items-center justify-center">
         <Bot className="h-5 w-5" />
       </div>
 
@@ -150,7 +150,7 @@ export function ChatMessageLoading() {
 export function ChatMessageError({ error }: { error: string }) {
   return (
     <div className="flex gap-3 mb-4">
-      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center">
+      <div className="shrink-0 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center">
         ⚠️
       </div>
       <div className="flex-1 max-w-[75%]">

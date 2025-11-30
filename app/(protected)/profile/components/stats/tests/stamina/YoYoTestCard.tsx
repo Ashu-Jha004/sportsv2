@@ -124,7 +124,7 @@ export function YoYoTestCard({ data, recordedAt }: YoYoTestCardProps) {
         </div>
 
         {/* Recovery Capacity Analysis */}
-        <div className="p-6 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl border-2 border-pink-200">
+        <div className="p-6 bg-linear-to-r from-pink-50 to-purple-50 rounded-xl border-2 border-pink-200">
           <h4 className="text-sm font-semibold text-pink-900 mb-3 flex items-center gap-2">
             <span>🔄</span>
             Intermittent Recovery Capacity

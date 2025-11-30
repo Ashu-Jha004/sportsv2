@@ -245,8 +245,8 @@ export function SitAndReachCard({ data, recordedAt }: SitAndReachCardProps) {
                 <div
                   className={`h-full ${
                     calculated.bestReach >= 0
-                      ? "bg-gradient-to-r from-cyan-500 to-cyan-600"
-                      : "bg-gradient-to-l from-red-500 to-red-600"
+                      ? "bg-linear-to-r from-cyan-500 to-cyan-600"
+                      : "bg-linear-to-l from-red-500 to-red-600"
                   } transition-all duration-1000`}
                   style={{
                     width: `${Math.min(
@@ -275,8 +275,8 @@ export function SitAndReachCard({ data, recordedAt }: SitAndReachCardProps) {
                 <div
                   className={`h-full ${
                     calculated.averageReach >= 0
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                      : "bg-gradient-to-l from-orange-500 to-orange-600"
+                      ? "bg-linear-to-r from-blue-500 to-blue-600"
+                      : "bg-linear-to-l from-orange-500 to-orange-600"
                   } transition-all duration-1000`}
                   style={{
                     width: `${Math.min(

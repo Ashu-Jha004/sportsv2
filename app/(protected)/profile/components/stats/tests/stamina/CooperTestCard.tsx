@@ -145,7 +145,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
         <InsightCard insight={insight} />
 
         {/* Pacing Analysis */}
-        <div className="p-6 bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl border-2 border-teal-200">
+        <div className="p-6 bg-linear-to-r from-teal-50 to-blue-50 rounded-xl border-2 border-teal-200">
           <h4 className="text-sm font-semibold text-teal-900 mb-3 flex items-center gap-2">
             <span>🏃</span>
             Pacing & Efficiency
@@ -247,7 +247,7 @@ export function CooperTestCard({ data, recordedAt }: CooperTestCardProps) {
                     </h6>
                     <div className="relative h-6 bg-gray-200 rounded-full overflow-hidden">
                       <div
-                        className="absolute h-full bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 to-blue-500"
+                        className="absolute h-full bg-linear-to-r from-red-500 via-yellow-500 via-green-500 to-blue-500"
                         style={{ width: "100%" }}
                       />
                       <div

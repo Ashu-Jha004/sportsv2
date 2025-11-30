@@ -1,77 +1,145 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useTransition } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Info, Camera, ListChecks, BarChart2, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import AboutTab from "./AboutTab";
 import MediaTab from "./MediaTab";
 import MatchTab from "./MatchTab";
 import StatsTab from "./StatTab";
-import { Info, Camera, ListChecks, BarChart2 } from "lucide-react";
 import { useAthleteStats } from "../hooks/profile/useAthleteStats";
+
+const TABS = [
+  { id: "about", label: "About", icon: Info },
+  { id: "media", label: "Media", icon: Camera },
+  { id: "match", label: "Matches", icon: ListChecks },
+  { id: "stats", label: "Stats", icon: BarChart2 },
+] as const;
+
 export default function AthleteBody({
   athlete,
   media,
   matches,
   isOwnProfile,
 }: any) {
-  const [activeSection, setActiveSection] = useState("about");
+  const [activeSection, setActiveSection] = useState<
+    "about" | "media" | "match" | "stats"
+  >("about");
+  const [isPending, startTransition] = useTransition();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    error,
+  } = useAthleteStats(athlete.clerkUserId);
 
-  const handleNavigation = useCallback((section: string) => {
-    setActiveSection(section);
-  }, []);
-  const { data, isLoading, error } = useAthleteStats(athlete.clerkUserId);
+  const handleNavigation = useCallback(
+    (section: (typeof TABS)[number]["id"]) => {
+      startTransition(() => {
+        setActiveSection(section);
+      });
+    },
+    []
+  );
+
+  const activeTab = TABS.find((tab) => tab.id === activeSection)!;
+
   return (
-    <section className="max-w-6xl mx-auto mt-10 bg-white rounded-xl shadow-md p-6">
-      {/* Responsive Navigation Menu */}
-      <nav className="flex flex-col sm:flex-row sm:justify-center mb-4 space-y-2 sm:space-y-0 sm:space-x-4">
-        <button
-          className={`flex items-center gap-2 px-4 py-2 rounded ${
-            activeSection === "about" ? "bg-gray-300" : "hover:bg-gray-100"
-          }`}
-          onClick={() => handleNavigation("about")}
-        >
-          <Info size={18} /> About
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 rounded ${
-            activeSection === "media" ? "bg-gray-300" : "hover:bg-gray-100"
-          }`}
-          onClick={() => handleNavigation("media")}
-        >
-          <Camera size={18} /> Media
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 rounded ${
-            activeSection === "match" ? "bg-gray-300" : "hover:bg-gray-100"
-          }`}
-          onClick={() => handleNavigation("match")}
-        >
-          <ListChecks size={18} /> Match
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 rounded ${
-            activeSection === "stats" ? "bg-gray-300" : "hover:bg-gray-100"
-          }`}
-          onClick={() => handleNavigation("stats")}
-        >
-          <BarChart2 size={18} /> Stats
-        </button>
-      </nav>
+    <section className="w-full max-w-7xl mx-auto mt-8 lg:mt-12">
+      {/* Modern Glassmorphism Tab Navigation */}
+      <div className="bg-white/70 backdrop-blur-xl border border-slate-200/50 rounded-3xl shadow-2xl shadow-slate-200/50 p-1 sticky top-4 z-20 mx-4 lg:mx-0">
+        <nav className="flex flex-col sm:flex-row gap-1 p-1">
+          {TABS.map((tab) => {
+            const isActive = tab.id === activeSection;
+            return (
+              <Button
+                key={tab.id}
+                variant="ghost"
+                size="sm"
+                onClick={() => handleNavigation(tab.id)}
+                className={cn(
+                  "flex-1 sm:flex-none h-14 px-4 gap-3 font-semibold text-sm tracking-tight transition-all duration-300 group relative overflow-hidden",
+                  isActive
+                    ? "bg-linear-to-r from-blue-600 to-emerald-600 text-white shadow-2xl shadow-blue-500/25 hover:shadow-blue-500/40"
+                    : "text-slate-700 hover:text-slate-900 hover:bg-white/80 hover:shadow-lg hover:shadow-slate-200/50 hover:-translate-y-0.5"
+                )}
+              >
+                <tab.icon
+                  size={20}
+                  className={cn(
+                    "shrink-0 transition-transform group-hover:scale-110",
+                    isActive && "group-hover:scale-105"
+                  )}
+                />
+                <span className="hidden sm:inline">{tab.label}</span>
 
-      {/* Show selected section */}
-      {activeSection === "about" && <AboutTab athlete={athlete} />}
-      {activeSection === "media" && (
-        <MediaTab media={media} isOwnProfile={isOwnProfile} />
-      )}
-      {activeSection === "match" && (
-        <MatchTab matches={matches} isOwnProfile={isOwnProfile} />
-      )}
-      {activeSection === "stats" && (
-        <StatsTab
-          stats={data}
-          isOwnProfile={isOwnProfile}
-          username={athlete.username}
-        />
-      )}
+                {/* Active Tab Glow Effect */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bg-linear-to-r from-blue-600/20 to-emerald-600/20 -inset-1 rounded-2xl blur-xl -z-10"
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+
+                {/* Loading Spinner */}
+                {isPending && tab.id === activeSection && (
+                  <Loader2 className="w-4 h-4 ml-auto animate-spin shrink-0" />
+                )}
+              </Button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* Content Area with Smooth Transitions */}
+      <div className="relative mt-8 mx-4 lg:mx-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSection}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-linear-to-b from-slate-50/80 to-white/70 backdrop-blur-xl border border-slate-200/50 rounded-3xl shadow-2xl shadow-slate-200/25 p-8 lg:p-12 min-h-[400px]"
+          >
+            {activeSection === "about" && <AboutTab athlete={athlete} />}
+            {activeSection === "media" && (
+              <MediaTab media={media} isOwnProfile={isOwnProfile} />
+            )}
+            {activeSection === "match" && (
+              <MatchTab matches={matches} isOwnProfile={isOwnProfile} />
+            )}
+            {activeSection === "stats" && (
+              <StatsTab
+                stats={stats}
+                isOwnProfile={isOwnProfile}
+                username={athlete.username}
+                isLoading={statsLoading}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Mobile Tab Labels */}
+        <div className="lg:hidden flex justify-center mt-4 space-x-2">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleNavigation(tab.id)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200",
+                activeSection === tab.id
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

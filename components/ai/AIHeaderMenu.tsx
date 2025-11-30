@@ -158,7 +158,7 @@ export function AIHeaderMenuCompact({
       {/* Toggle Button */}
       <Button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
+        className="bg-linear-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg"
         size="sm"
       >
         <Sparkles className="h-4 w-4 mr-1.5" />
@@ -184,7 +184,7 @@ export function AIHeaderMenuCompact({
                   onClick={() => handleOpenAI(role.id)}
                   className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100 last:border-b-0"
                 >
-                  <span className="text-2xl flex-shrink-0">{role.icon}</span>
+                  <span className="text-2xl shrink-0">{role.icon}</span>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-gray-900 text-sm">
                       {role.label}

@@ -1,14 +1,16 @@
-// app/(protected)/profile/[username]/stats/page.tsx
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+
 import { useAthleteStatsStore } from "@/stores/athlete/athleteStats.store";
 import {
   processAthleteStats,
   type CleanedAthleteStats,
 } from "../../lib/utils/statsDataProcessor";
+
 import { AIHeaderMenu } from "@/components/ai/AIHeaderMenu";
 import { StatsPageHeader } from "../../components/stats/layout/StatsPageHeader";
 import { PerformanceOverview } from "../../components/stats/layout/PerformanceOverview";
@@ -18,11 +20,6 @@ import { AnthropometricSection } from "../../components/stats/sections/Anthropom
 import { StrengthSection } from "../../components/stats/sections/StrengthSection";
 import { SpeedSection } from "../../components/stats/sections/SpeedSection";
 import { StaminaSection } from "../../components/stats/sections/StaminaSection";
-import { Loader2 } from "lucide-react";
-
-interface PageProps {
-  params: Promise<{ username?: string }>;
-}
 
 type ActiveView =
   | "overview"
@@ -32,88 +29,88 @@ type ActiveView =
   | "stamina"
   | "anthropometric";
 
+interface PageProps {
+  // Next 16: params is a Promise and must be unwrapped with React.use()
+  params: Promise<{ username?: string }>;
+}
+
+type ProfileResponse = {
+  id: string;
+  clerkUserId?: string;
+  firstName?: string;
+  // ...whatever else StatsPageHeader expects
+};
+
+async function fetchProfile(
+  username: string | undefined,
+  isOwnProfile: boolean
+): Promise<ProfileResponse> {
+  const url = isOwnProfile
+    ? "/api/user/current"
+    : `/api/user/${encodeURIComponent(username!)}`;
+
+  const res = await fetch(url, { credentials: "include" });
+  const data = await res.json();
+
+  if (!res.ok || !data?.success || !data?.data) {
+    throw new Error(data?.error || "Failed to load profile");
+  }
+
+  return data.data as ProfileResponse;
+}
+
 const StatsPage = ({ params }: PageProps) => {
   const { user, isLoaded } = useUser();
   const { username: routeUsername } = React.use(params);
   const isOwnProfile = routeUsername == null;
 
-  const [profileData, setProfileData] = useState<any>(null);
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<ActiveView>("overview");
-  const [cleanedStats, setCleanedStats] = useState<CleanedAthleteStats | null>(
-    null
-  );
-  const [statsFetchAttempted, setStatsFetchAttempted] = useState(false);
+  const [activeView, setActiveView] = React.useState<ActiveView>("overview");
+  const [cleanedStats, setCleanedStats] =
+    React.useState<CleanedAthleteStats | null>(null);
+  const [statsFetchAttempted, setStatsFetchAttempted] = React.useState(false);
 
-  // Get stats store functions
   const {
     fetchStatsByAthleteId,
     fetchStatsByUsername,
     fetchCurrentUserStats,
     getStats,
-    getStatus, // ✅ Add getStatus
+    getStatus,
   } = useAthleteStatsStore();
 
-  // Determine cache key
-  const cacheKey = isOwnProfile
-    ? "current:user"
-    : profileData?.clerkUserId
-    ? `athlete:${profileData.clerkUserId}`
-    : routeUsername
-    ? `username:${routeUsername}`
-    : null;
+  // Profile via React Query (cached)
+  const {
+    data: profileData,
+    isPending: isProfileLoading,
+    isError: isProfileError,
+    error: profileError,
+  } = useQuery<ProfileResponse>({
+    queryKey: ["athlete-profile-stats", isOwnProfile ? "me" : routeUsername],
+    queryFn: () => fetchProfile(routeUsername, isOwnProfile),
+    enabled: isLoaded && (isOwnProfile || !!routeUsername),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
 
-  // Get comprehensive status
+  const cacheKey = React.useMemo(() => {
+    if (!profileData && !isOwnProfile && routeUsername) {
+      return `username:${routeUsername}`;
+    }
+    if (isOwnProfile) {
+      return "current:user";
+    }
+    if (profileData?.clerkUserId) {
+      return `athlete:${profileData.clerkUserId}`;
+    }
+    return null;
+  }, [isOwnProfile, profileData, routeUsername]);
+
   const statsStatus = cacheKey ? getStatus(cacheKey) : null;
 
-  // --- Profile Data Fetching ---
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    const fetchProfile = async () => {
-      setIsLoadingProfile(true);
-      setError(null);
-
-      try {
-        const url = isOwnProfile
-          ? "/api/user/current"
-          : `/api/user/${encodeURIComponent(routeUsername!)}`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || "Failed to load profile");
-        }
-
-        if (data.data) {
-          setProfileData(data.data);
-        }
-      } catch (err) {
-        console.error("❌ Profile fetch error:", err);
-        setError(err instanceof Error ? err.message : "Failed to load profile");
-      } finally {
-        setIsLoadingProfile(false);
-      }
-    };
-
-    if (isOwnProfile || routeUsername) {
-      fetchProfile();
-    }
-  }, [isLoaded, isOwnProfile, routeUsername]);
-
-  // --- Stats Fetching ---
-  useEffect(() => {
-    if (!profileData || statsFetchAttempted) return;
+  // Fetch stats once profile is available
+  React.useEffect(() => {
+    if (!profileData || !cacheKey || statsFetchAttempted) return;
 
     const fetchStats = async () => {
-      console.log("🔄 Fetching stats for:", {
-        isOwnProfile,
-        profileData,
-        routeUsername,
-      });
-
       try {
         if (isOwnProfile) {
           await fetchCurrentUserStats();
@@ -123,7 +120,7 @@ const StatsPage = ({ params }: PageProps) => {
           await fetchStatsByUsername(routeUsername);
         }
       } catch (err) {
-        console.error("❌ Stats fetch error:", err);
+        console.error("Stats fetch error:", err);
       } finally {
         setStatsFetchAttempted(true);
       }
@@ -132,45 +129,33 @@ const StatsPage = ({ params }: PageProps) => {
     fetchStats();
   }, [
     profileData,
+    cacheKey,
+    statsFetchAttempted,
     isOwnProfile,
     routeUsername,
-    statsFetchAttempted,
     fetchCurrentUserStats,
     fetchStatsByAthleteId,
     fetchStatsByUsername,
   ]);
 
-  // --- Process Stats Data ---
-  useEffect(() => {
+  // Process stats once they exist in the store
+  React.useEffect(() => {
     if (!cacheKey || !statsFetchAttempted) return;
 
-    console.log("🔍 Checking stats in cache:", cacheKey);
     const rawStats = getStats(cacheKey);
+    if (!rawStats) return;
 
-    if (rawStats) {
-      console.log("✅ Stats found in cache, processing...");
-      try {
-        const processed = processAthleteStats(rawStats);
-        setCleanedStats(processed);
-        console.log("✅ Stats processed successfully");
-      } catch (err) {
-        console.error("❌ Error processing stats:", err);
-      }
-    } else {
-      console.log("⚠️ No stats in cache yet");
+    try {
+      const processed = processAthleteStats(rawStats);
+      setCleanedStats(processed);
+    } catch (err) {
+      console.error("Error processing stats:", err);
     }
   }, [cacheKey, statsFetchAttempted, getStats]);
 
-  // Debug logging
-  console.log("📊 Current state:", {
-    cacheKey,
-    statsStatus,
-    statsFetchAttempted,
-    hasCleanedStats: !!cleanedStats,
-  });
+  // ----- Profile loading/error states -----
 
-  // --- Loading State ---
-  if (isLoadingProfile) {
+  if (!isLoaded || isProfileLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-50">
         <div className="text-center">
@@ -181,8 +166,7 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
-  // --- Error State ---
-  if (error) {
+  if (isProfileError) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-50 p-4">
         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-8 max-w-md w-full">
@@ -191,7 +175,11 @@ const StatsPage = ({ params }: PageProps) => {
             <h2 className="text-2xl font-bold text-red-800 mb-3">
               Error Loading Profile
             </h2>
-            <p className="text-red-600 mb-6">{error}</p>
+            <p className="text-red-600 mb-6">
+              {profileError instanceof Error
+                ? profileError.message
+                : "Failed to load profile."}
+            </p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -204,7 +192,6 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
-  // --- No Profile State ---
   if (!profileData) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-50">
@@ -217,7 +204,8 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
-  // --- Stats Loading State ---
+  // ----- Stats loading / error / empty states -----
+
   if (statsStatus?.isLoading || !statsFetchAttempted) {
     return (
       <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 to-blue-50">
@@ -242,7 +230,6 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
-  // --- Stats Error State ---
   if (statsStatus?.hasError) {
     return (
       <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 to-blue-50">
@@ -276,9 +263,6 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
-  console.log("✅ Stats loaded successfully:", cleanedStats);
-
-  // --- No Stats State ---
   if (!statsStatus?.hasData || !cleanedStats) {
     return (
       <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 to-blue-50">
@@ -297,7 +281,9 @@ const StatsPage = ({ params }: PageProps) => {
                 <p className="text-yellow-700 text-lg mb-6">
                   {isOwnProfile
                     ? "You haven't completed a performance evaluation yet."
-                    : `${profileData.firstName} hasn't completed a performance evaluation yet.`}
+                    : `${
+                        profileData.firstName ?? "This athlete"
+                      } hasn't completed a performance evaluation yet.`}
                 </p>
                 {isOwnProfile && (
                   <button className="px-8 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors font-semibold">
@@ -312,28 +298,25 @@ const StatsPage = ({ params }: PageProps) => {
     );
   }
 
-  // --- Main Stats Display ---
+  // ----- Main stats display -----
+
   return (
     <div className="fixed inset-0 overflow-y-auto bg-linear-to-br from-gray-50 via-blue-50 to-purple-50">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Header */}
         <StatsPageHeader
           profileData={profileData}
           isOwnProfile={isOwnProfile}
           stats={cleanedStats}
         />
 
-        {/* Add this after StatsPageHeader or in a logical spot */}
         <div className="mt-4 flex justify-end">
           <AIHeaderMenu stats={cleanedStats} />
         </div>
 
-        {/* Performance Overview Hero Section */}
         <div className="mt-8">
           <PerformanceOverview stats={cleanedStats} />
         </div>
 
-        {/* Navigation Tabs - Sticky */}
         <div className="mt-8 sticky top-0 z-20 bg-linear-to-br from-gray-50 via-blue-50 to-purple-50 py-2">
           <StatsNavigation
             activeView={activeView}
@@ -342,7 +325,6 @@ const StatsPage = ({ params }: PageProps) => {
           />
         </div>
 
-        {/* Content Area */}
         <div className="mt-8 pb-20">
           {activeView === "overview" && (
             <div className="space-y-8">
@@ -368,7 +350,6 @@ const StatsPage = ({ params }: PageProps) => {
           {activeView === "stamina" && <StaminaSection stats={cleanedStats} />}
         </div>
 
-        {/* Footer */}
         <div className="pb-8 text-center text-sm text-gray-500">
           <p>
             Last updated:{" "}

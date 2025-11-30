@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 import AthleteHeader from "../components/AthleteHeader";
 import AthleteBody from "../components/AthleteBody";
 import type {
@@ -12,62 +12,65 @@ import type {
   MatchHistory,
 } from "@/types/profile/athlete-profile.types";
 import { Sport } from "../schemas/edit-profile-schema";
-import { useAthleteStats } from "../hooks/profile/useAthleteStats";
+// import { useAthleteStats } from "../hooks/profile/useAthleteStats";
 
 interface PageProps {
+  // Next 16: params is a Promise and must be unwrapped with React.use()
   params: Promise<{ username?: string }>;
+}
+
+async function fetchAthleteProfile(
+  username: string | undefined,
+  isOwnProfile: boolean
+): Promise<AthleteProfile> {
+  const url = isOwnProfile
+    ? "/api/user/current"
+    : `/api/user/${encodeURIComponent(username!)}`;
+
+  const response = await fetch(url, { credentials: "include" });
+  const data = await response.json();
+
+  if (!response.ok || !data?.success || !data?.data) {
+    throw new Error(data?.error || "Failed to load profile");
+  }
+
+  return data.data as AthleteProfile;
 }
 
 export default function DynamicProfilePage({ params }: PageProps) {
   const { user, isLoaded } = useUser();
 
-  // ✅ Unwrap the params Promise once, per Next 16 requirement
+  // ✅ Next 16: unwrap params Promise once
   const { username: routeUsername } = React.use(params);
 
-  // /profile  -> own profile (no username)
-  // /profile/[username] -> public profile
+  // /profile        -> own profile (no username)
+  // /profile/[user] -> public profile
   const isOwnProfile = routeUsername == null;
+  const isFriendProfile = !isOwnProfile;
 
-  const [profileData, setProfileData] = useState<any>(null);
-  const [statsData, setStatsData] = useState<AthleteStats | null>(null);
-  const [mediaData, setMediaData] = useState<MediaItem[]>([]);
-  const [matchesData, setMatchesData] = useState<MatchHistory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // ✅ React Query for profile (cached, avoids redundant calls)
+  const {
+    data: profileData,
+    isPending,
+    isError,
+    error,
+  } = useQuery<AthleteProfile>({
+    queryKey: ["athlete-profile", isOwnProfile ? "me" : routeUsername],
+    queryFn: () => fetchAthleteProfile(routeUsername, isOwnProfile),
+    enabled: isLoaded && (isOwnProfile || !!routeUsername),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
 
-  useEffect(() => {
-    if (!isLoaded) return;
+  // Stats – can be wired later
+  const statsData: AthleteStats | null = null;
+  // const { data: statsData } = useAthleteStats(profileData?.id);
 
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const url = isOwnProfile
-          ? "/api/user/current"
-          : `/api/user/${encodeURIComponent(routeUsername!)}`;
-
-        console.log("🔍 STEP 1: Fetching from:", url);
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || "Failed to load profile");
-        }
-
-        if (data.data) {
-          console.log("🔍 STEP 3: Setting profileData with:", {
-            id: data.data.id,
-            username: data.data.username,
-            hasCity: !!data.data.city,
-            city: data.data.city,
-            allKeys: Object.keys(data.data),
-          });
-          setProfileData(data.data);
-
-
-          setMediaData([
+  // Mock media & matches (only derived when profile exists)
+  const mediaData: MediaItem[] = React.useMemo(
+    () =>
+      profileData
+        ? [
             {
               id: "1",
               type: "IMAGE",
@@ -82,9 +85,15 @@ export default function DynamicProfilePage({ params }: PageProps) {
               caption: "Match day",
               uploadedAt: new Date().toISOString(),
             },
-          ]);
+          ]
+        : [],
+    [profileData]
+  );
 
-          setMatchesData([
+  const matchesData: MatchHistory[] = React.useMemo(
+    () =>
+      profileData
+        ? [
             {
               id: "1",
               date: "2025-11-15",
@@ -107,64 +116,67 @@ export default function DynamicProfilePage({ params }: PageProps) {
               location: "Away Ground",
               duration: 90,
             },
-          ]);
-        }
-      } catch (err) {
-        console.error("❌ Error:", err);
-        setError(err instanceof Error ? err.message : "Failed to load profile");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+          ]
+        : [],
+    [profileData]
+  );
 
-    if (isOwnProfile || routeUsername) {
-      fetchProfile();
-    }
-  }, [isLoaded, isOwnProfile, routeUsername]);
-
-  useEffect(() => {
-    console.log("🔍 STEP 4: Rendering with profileData:", {
-      exists: !!profileData,
-      id: profileData?.id,
-      username: profileData?.username,
-      hasCity: !!profileData?.city,
-      city: profileData?.city,
-      keys: profileData ? Object.keys(profileData) : [],
-    });
-  }, [profileData]);
-
-  if (isLoading) {
+  // Loading (wait for Clerk + query)
+  if (!isLoaded || isPending) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-          <h2 className="text-xl font-semibold text-red-800 mb-2">❌ Error</h2>
-          <p className="text-red-600">{error}</p>
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-12 w-12 rounded-full border-4 border-blue-600/70 border-t-transparent animate-spin" />
+          <p className="text-sm font-medium text-slate-600">
+            Loading profile...
+          </p>
         </div>
       </div>
     );
   }
 
+  // Error
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="bg-red-50 border border-red-200 rounded-xl px-6 py-5 max-w-md w-full shadow-sm">
+          <h2 className="text-lg font-semibold text-red-800 mb-1">
+            Unable to load profile
+          </h2>
+          <p className="text-sm text-red-700">
+            {error instanceof Error ? error.message : "Something went wrong."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found
   if (!profileData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Profile Not Found</h2>
+          <h2 className="text-2xl font-bold mb-2 text-slate-900">
+            Profile not found
+          </h2>
+          <p className="text-sm text-slate-500">
+            This athlete profile could not be located.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AthleteHeader athlete={profileData} isOwnProfile={isOwnProfile} />
+    <div className="min-h-screen bg-slate-50">
+      <AthleteHeader
+        athlete={profileData}
+        isOwnProfile={isOwnProfile}
+        isFriendProfile={isFriendProfile}
+        onMessageUser={() => {
+          console.log("Open chat with", profileData.username);
+        }}
+      />
       <AthleteBody
         athlete={profileData}
         stats={statsData}

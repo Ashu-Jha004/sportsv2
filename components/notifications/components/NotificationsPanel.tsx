@@ -1,4 +1,3 @@
-// src/features/notifications/components/NotificationsPanel.tsx
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
@@ -163,12 +162,12 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
   };
 
   return (
-    <div className="flex h-96 flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-2">
+    <div className="flex h-[500px] flex-col bg-white">
+      {/* Header - Fixed */}
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 bg-linear-to-r from-slate-50 to-white shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold">Notifications</span>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+          <h3 className="text-base font-bold text-slate-900">Notifications</h3>
+          <span className="rounded-full bg-blue-100 text-blue-700 px-2.5 py-0.5 text-xs font-semibold">
             {filter === "all" ? "All" : "Unread"}
           </span>
         </div>
@@ -177,77 +176,94 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-8 w-8 hover:bg-slate-100 rounded-lg"
             onClick={() => setFilter(filter === "all" ? "unread" : "all")}
             title="Toggle filter"
           >
-            <Filter className="h-3 w-3" />
+            <Filter className="h-4 w-4 text-slate-600" />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-8 w-8 hover:bg-slate-100 rounded-lg"
             onClick={() => refetch()}
             disabled={isFetching}
             title="Refresh"
           >
             <RefreshCw
-              className={cn("h-3 w-3", isFetching && "animate-spin")}
+              className={cn(
+                "h-4 w-4 text-slate-600",
+                isFetching && "animate-spin"
+              )}
             />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="h-8 w-8 hover:bg-green-50 rounded-lg"
             onClick={() => markAllReadMutation.mutate()}
             disabled={isMutating}
             title="Mark all as read"
           >
-            <CheckCheck className="h-3 w-3" />
+            <CheckCheck className="h-4 w-4 text-green-600" />
           </Button>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-red-500 hover:text-red-600"
+            className="h-8 w-8 hover:bg-red-50 rounded-lg"
             onClick={() => clearAllMutation.mutate()}
             disabled={isMutating}
             title="Clear all notifications"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="h-4 w-4 text-red-600" />
           </Button>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="flex flex-1 flex-col">
+      {/* Body - Scrollable */}
+      <div className="flex-1 overflow-hidden">
         {isLoading ? (
-          <div className="flex flex-1 items-center justify-center gap-2 text-xs text-slate-500">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading notifications…</span>
+          <div className="flex h-full items-center justify-center gap-2 text-sm text-slate-500">
+            <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+            <span className="font-medium">Loading notifications…</span>
           </div>
         ) : isError ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 text-center text-xs text-red-500">
-            <span>{devErrorMessage}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-1"
-              onClick={() => refetch()}
-            >
-              Try again
-            </Button>
+          <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+              <span className="text-red-500 text-xl">⚠️</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-red-600">
+                {devErrorMessage}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => refetch()}
+              >
+                Try again
+              </Button>
+            </div>
           </div>
         ) : items.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center px-4 text-center text-xs text-slate-500">
-            <span>No notifications yet.</span>
+          <div className="flex h-full flex-col items-center justify-center px-4 text-center gap-2">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
+              <span className="text-3xl">🔔</span>
+            </div>
+            <p className="text-sm font-semibold text-slate-700">
+              No notifications yet
+            </p>
+            <p className="text-xs text-slate-500">You're all caught up!</p>
           </div>
         ) : (
           <>
-            <ScrollArea className="flex-1">
-              <div className="flex flex-col gap-1 p-2">
+            {/* Scrollable List */}
+            <ScrollArea className="h-full">
+              <div className="flex flex-col p-2 gap-1.5">
                 {items.map((notification) => {
                   const actor = notification.actor;
                   const fullName =
@@ -274,10 +290,10 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                       role="button"
                       tabIndex={0}
                       className={cn(
-                        "group flex w-full items-start gap-2 rounded-md border px-3 py-2 text-left text-xs transition-colors cursor-pointer",
+                        "group flex w-full items-start gap-3 rounded-lg border p-3 text-left text-xs transition-all cursor-pointer",
                         notification.isRead
-                          ? "border-slate-200 bg-white hover:bg-slate-50"
-                          : "border-slate-300 bg-slate-50 hover:bg-slate-100"
+                          ? "border-slate-200 bg-white hover:bg-slate-50 hover:border-slate-300"
+                          : "border-blue-200 bg-blue-50/50 hover:bg-blue-50 hover:border-blue-300"
                       )}
                       onClick={() => handleCardClick(notification)}
                       onKeyDown={(e) => {
@@ -287,24 +303,28 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                         }
                       }}
                     >
-                      {/* Read/unread dot */}
-                      <span
-                        className={cn(
-                          "mt-1 h-2 w-2 rounded-full",
-                          notification.isRead ? "bg-slate-300" : "bg-blue-500"
-                        )}
-                      />
+                      {/* Read/unread indicator */}
+                      <div className="shrink-0 pt-1">
+                        <span
+                          className={cn(
+                            "block h-2 w-2 rounded-full",
+                            notification.isRead
+                              ? "bg-slate-300"
+                              : "bg-blue-500 shadow-sm shadow-blue-500/50"
+                          )}
+                        />
+                      </div>
 
-                      <div className="flex-1 space-y-0.5">
+                      <div className="flex-1 space-y-1 min-w-0">
                         <div className="flex items-start gap-2">
-                          <Avatar className="h-7 w-7">
+                          <Avatar className="h-8 w-8 border-2 border-white shadow-sm shrink-0">
                             {actor?.profileImage && (
                               <AvatarImage
                                 src={actor.profileImage}
                                 alt={fullName ?? "User"}
                               />
                             )}
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-linear-to-br from-blue-500 to-blue-600 text-white text-xs font-semibold">
                               {(fullName ?? actor?.username ?? "?")
                                 .split(" ")
                                 .map((p) => p[0])
@@ -314,33 +334,38 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                             </AvatarFallback>
                           </Avatar>
 
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs font-medium">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-semibold text-slate-900 line-clamp-1">
                                 {notification.title}
                               </p>
                               {createdAtLabel && (
-                                <span className="text-[10px] text-slate-400">
+                                <span className="text-[10px] text-slate-400 whitespace-nowrap shrink-0">
                                   {createdAtLabel}
                                 </span>
                               )}
                             </div>
 
                             {fullName && (
-                              <p className="text-[11px] text-slate-500">
+                              <p className="text-xs text-slate-600 mt-0.5">
                                 {fullName}
-                                {actor?.username && ` · @${actor.username}`}
+                                {actor?.username && (
+                                  <span className="text-slate-400">
+                                    {" "}
+                                    · @{actor.username}
+                                  </span>
+                                )}
                               </p>
                             )}
 
-                            <p className="mt-0.5 text-[11px] text-slate-600">
+                            <p className="mt-1 text-xs text-slate-700 line-clamp-2">
                               {notification.message}
                             </p>
                           </div>
                         </div>
 
-                        <div className="mt-1 flex items-center justify-between gap-2">
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-500">
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                             {notification.type.type}
                           </span>
 
@@ -348,7 +373,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 px-1 text-[10px]"
+                              className="h-6 px-2 text-[10px] font-medium hover:bg-white"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleToggleRead(notification);
@@ -362,7 +387,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 px-1 text-[10px] text-red-500 hover:text-red-600"
+                              className="h-6 px-2 text-[10px] font-medium text-red-600 hover:text-red-700 hover:bg-red-50"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteMutation.mutate(notification.id);
@@ -379,16 +404,24 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
               </div>
             </ScrollArea>
 
+            {/* Load More Button - Fixed at bottom */}
             {hasMore && (
-              <div className="border-t px-4 py-2">
+              <div className="border-t border-slate-200 px-3 py-2 bg-slate-50/50 shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full text-xs"
+                  className="w-full text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                   onClick={() => loadMore()}
                   disabled={isFetching}
                 >
-                  {isFetching ? "Loading more…" : "Load more"}
+                  {isFetching ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Loading more…
+                    </span>
+                  ) : (
+                    "Load more notifications"
+                  )}
                 </Button>
               </div>
             )}
@@ -396,7 +429,7 @@ export function NotificationsPanel({ onClose }: NotificationsPanelProps) {
         )}
       </div>
 
-      {/* Evaluation details dialog for STAT_UPDATE_* notifications */}
+      {/* Evaluation details dialog */}
       <Dialog
         open={evalDetails.open}
         onOpenChange={(open) => {
