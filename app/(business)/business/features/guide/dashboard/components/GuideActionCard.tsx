@@ -15,7 +15,7 @@ import { useMemo } from "react"; // add useMemo
 import { useVerifyStatsOtp } from "../../hooks/useVerifyStatsOtp";
 import { useGuideStatsOtpStore } from "@/stores/guide/OTPVeification/guideStatsOtpStore";
 import { useRouter } from "next/navigation";
-
+import TeamApplicationDialog from "@/components/guide/team/TeamApplicationDialog";
 export function GuideActionsCard() {
   const router = useRouter();
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
@@ -253,15 +253,7 @@ export function GuideActionsCard() {
       </Dialog>
 
       {/* Existing placeholder can remain or be removed */}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled
-        className="justify-start"
-      >
-        Stat update (coming soon)
-      </Button>
+      <TeamApplicationDialog />
     </Card>
   );
 }
