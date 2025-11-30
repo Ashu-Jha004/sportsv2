@@ -12,13 +12,5 @@ export default function RootLayout({
 }) {
   const { user } = useUser();
 
-  return (
-    <LayoutShell
-      brandName="Sparta"
-      userName={user?.publicMetadata?.username || ""}
-      menus={MENU_ITEMS}
-    >
-      {children}
-    </LayoutShell>
-  );
+  return <LayoutShell brandName="Sparta">{children}</LayoutShell>;
 }

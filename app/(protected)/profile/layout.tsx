@@ -43,13 +43,7 @@ export default function RootLayout({
 
   return (
     <>
-      <LayoutShell
-        brandName="Sparta"
-        userName={user?.publicMetadata?.username || ""}
-        menus={MENU_ITEMS}
-      >
-        {children}
-      </LayoutShell>
+      <LayoutShell brandName="Sparta">{children}</LayoutShell>
 
       {/* Global Dialogs */}
       <GuideFinderDialog />
