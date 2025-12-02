@@ -17,7 +17,7 @@ type ActionResult<T> =
  * 1. Check if athlete already owns a team (unique constraint on ownerId)
  */
 export async function checkExistingTeamOwnership(): Promise<
-  ActionResult<{ hasTeam: boolean; teamId?: string }>
+  ActionResult<{ hasTeam: boolean; teamId?: any }>
 > {
   try {
     const { userId } = await auth();
@@ -26,7 +26,11 @@ export async function checkExistingTeamOwnership(): Promise<
 
     const athlete = await prisma.athlete.findUnique({
       where: { clerkUserId: userId },
-      include: { teamsOwned: { select: { id: true, status: true } } },
+      include: {
+        teamsOwned: {
+          select: { id: true, status: true, teamApplicationId: true },
+        },
+      },
     });
 
     if (!athlete)
@@ -40,7 +44,7 @@ export async function checkExistingTeamOwnership(): Promise<
       success: true,
       data: {
         hasTeam: !!activeTeam,
-        teamId: activeTeam?.id,
+        teamId: activeTeam?.teamApplicationId,
       },
     };
   } catch (error) {

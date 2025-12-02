@@ -51,9 +51,7 @@ function buildNotificationLink(
       case "APPLICATION_APPROVED":
       case "APPLICATION_REJECTED": {
         const applicationId = payload.applicationId as string | undefined;
-        return applicationId
-          ? `/associate/applications/${applicationId}`
-          : null;
+        return applicationId ? `/team/${applicationId}` : null;
       }
       case "TEAM_INVITE":
       case "TEAM_EXPIRING":
@@ -61,7 +59,7 @@ function buildNotificationLink(
       case "MEMBER_LEFT":
       case "ROLE_CHANGED": {
         const teamId = payload.teamId as string | undefined;
-        return teamId ? `/teams/${teamId}` : null;
+        return teamId ? `/team/${teamId}` : null;
       }
       case "ACCOUNT_UPDATE":
       case "SECURITY_ALERT":

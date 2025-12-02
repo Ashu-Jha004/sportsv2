@@ -8,7 +8,7 @@ import { Users, Search, Swords } from "lucide-react";
 
 export default function TeamPage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
+    <div className="min-h-[calc(100vh-4rem)] bg-linear-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
       <div className="mx-auto flex max-w-5xl flex-col gap-10 px-4 pb-16 pt-14 md:pt-20">
         {/* Hero */}
         <section className="space-y-6">
@@ -83,7 +83,7 @@ function ActionCard({
     >
       {/* subtle glow */}
       <div className="pointer-events-none absolute inset-0 opacity-0 blur-3xl transition-opacity duration-200 group-hover:opacity-40">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/40 via-cyan-500/30 to-sky-500/20" />
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-500/40 via-cyan-500/30 to-sky-500/20" />
       </div>
 
       <div className="relative space-y-4">

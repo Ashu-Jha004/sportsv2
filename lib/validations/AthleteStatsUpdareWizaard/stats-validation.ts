@@ -210,7 +210,7 @@ export const completeStatsPayloadSchema = z.object({
 // ============================================
 export const submitStatsInputSchema = z.object({
   athleteClerkUserId: z.string().min(1, "Athlete Clerk User ID is required"),
-  guideId: z.string().uuid("Invalid guide ID format"),
+  guideId: z.string(),
   requestId: z.string().min(1, "Request ID is required"),
   payload: z.any(), // Will validate separately for better error messages
 });

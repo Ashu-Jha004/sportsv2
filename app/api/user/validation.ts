@@ -327,7 +327,7 @@ export const commonSchemas = {
    * CUID or UUID identifier
    */
   id: z.object({
-    id: z.string().cuid().or(z.string().uuid()),
+    id: z.string(),
   }),
 
   /**
