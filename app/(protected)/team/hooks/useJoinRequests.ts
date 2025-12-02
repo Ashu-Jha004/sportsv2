@@ -18,7 +18,7 @@ export function useJoinRequests(teamId: string) {
       return json.data || [];
     },
     staleTime: 3 * 60 * 1000, // 3 minutes
-    refetchInterval: pollingConfig.joinRequests, // Conditional polling
+    refetchInterval: pollingConfig["join-requests"], // Conditional polling
     placeholderData: [],
   });
 }
