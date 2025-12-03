@@ -1,4 +1,3 @@
-// app/team/[teamId]/_components/invite/AthleteCard.tsx - FIXED
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -8,142 +7,190 @@ import { Card, CardContent } from "@/components/ui/card";
 import { sendTeamInvitation } from "../../../lib/actions/team/sendInvitation";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Crown, UserCheck } from "lucide-react";
+import { MapPin, Crown, UserCheck, Loader2, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+
+interface Athlete {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  profileImage?: string;
+  primarySport?: string;
+  rank?: string;
+  class?: string;
+  teamMembership?: any;
+}
 
 interface AthleteCardProps {
-  athlete: any;
+  athlete: Athlete;
   teamId: string;
   distance?: number;
+  onInviteSuccess?: () => void;
 }
 
 export default function AthleteCard({
   athlete,
   teamId,
   distance,
+  onInviteSuccess,
 }: AthleteCardProps) {
   const queryClient = useQueryClient();
+  const [inviteSent, setInviteSent] = useState(false);
 
   const sendInvite = useMutation({
     mutationFn: () => sendTeamInvitation({ teamId, athleteId: athlete.id }),
     onSuccess: (data) => {
       if (data.success) {
-        toast.success(
-          `✅ Invite sent to ${athlete.firstName} ${athlete.lastName}!`,
-          { duration: 4000 }
-        );
-        // ✅ FIXED: Proper query invalidation
-        queryClient.invalidateQueries({
-          queryKey: ["team-invites", "pending", teamId],
+        toast.success(`Invite sent to ${athlete.firstName}!`, {
+          duration: 3000,
         });
-        queryClient.invalidateQueries({ queryKey: ["nearby-athletes"] });
+        setInviteSent(true);
+
+        // Invalidate relevant queries
+        queryClient.invalidateQueries({
+          queryKey: ["team-invites", teamId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["nearby-athletes", teamId],
+        });
+
+        // Call parent callback if provided
+        onInviteSuccess?.();
       } else {
         toast.error(data.error || "Failed to send invite");
       }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || "Failed to send invite");
     },
   });
 
   const isFreeAgent = !athlete.teamMembership;
+  const canInvite = isFreeAgent && !inviteSent;
 
   return (
-    <Card className="group hover:shadow-2xl hover:shadow-emerald-500/10 hover:border-emerald-300/50 transition-all duration-300 overflow-hidden border-slate-200 bg-white/80 backdrop-blur-sm hover:-translate-y-2">
-      <CardContent className="p-6">
-        <div className="flex items-start gap-4">
-          {/* Avatar */}
-          <div className="relative shrink-0">
-            {" "}
-            {/* ✅ Tailwind: flex-shrink-0 → shrink-0 */}
-            <div className="w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-slate-200/50 group-hover:ring-emerald-400/50 transition-all">
-              <Image
-                src={
-                  athlete.profileImage ||
-                  `https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=${
-                    athlete.username || athlete.id
-                  }`
-                }
-                alt={`${athlete.firstName} ${athlete.lastName}`}
-                width={80}
-                height={80}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                unoptimized
-              />
-            </div>
-          </div>
+    <Card
+      className={`group hover:shadow-lg transition-all duration-200 overflow-hidden border min-h-[180px] ${
+        inviteSent
+          ? "border-emerald-300 bg-emerald-50/50"
+          : "border-slate-200 hover:border-emerald-200 bg-white"
+      }`}
+    >
+      <CardContent className="p-4">
+        {/* Mobile: Vertical Layout, Desktop: Horizontal */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Avatar & Name Section */}
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden ring-2 ring-slate-200 group-hover:ring-emerald-300 transition-all">
+                <Image
+                  src={
+                    athlete.profileImage ||
+                    `https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=${
+                      athlete.username || athlete.id
+                    }`
+                  }
+                  alt={`${athlete.firstName} ${athlete.lastName}`}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
+              </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <div className="space-y-1">
-                <h4 className="font-bold text-xl text-slate-900 group-hover:text-emerald-600 truncate">
-                  {athlete.firstName} {athlete.lastName}
-                </h4>
-                <p className="text-sm font-semibold text-slate-600">
-                  @{athlete.username || "no-username"}
-                </p>
+              {/* Status Badge Overlay */}
+              {inviteSent && (
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                </div>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-base sm:text-lg text-slate-900 truncate">
+                {athlete.firstName} {athlete.lastName}
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-600 truncate">
+                @{athlete.username || "no-username"}
+              </p>
+
+              {/* Badges Row */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {athlete.rank && athlete.class && (
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-purple-100 text-purple-700 border-purple-200"
+                  >
+                    {athlete.rank} {athlete.class}
+                  </Badge>
+                )}
+                {athlete.primarySport && (
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200"
+                  >
+                    {athlete.primarySport}
+                  </Badge>
+                )}
+                {distance !== undefined && (
+                  <Badge variant="outline" className="text-xs">
+                    <MapPin className="w-3 h-3 mr-0.5" />
+                    {distance.toFixed(1)}km
+                  </Badge>
+                )}
+              </div>
+
+              {/* Status Indicator */}
+              <div className="flex items-center gap-1.5 mt-2 text-xs">
+                {isFreeAgent ? (
+                  <>
+                    <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="text-emerald-600 font-medium">
+                      {inviteSent ? "Invite sent" : "Free agent"}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Crown className="w-3.5 h-3.5 text-orange-500" />
+                    <span className="text-slate-600">In another team</span>
+                  </>
+                )}
               </div>
             </div>
-
-            {/* Badges */}
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <Badge
-                variant="secondary"
-                className="bg-gradient-linear-to-r from-purple-500/20 to-pink-500/20 text-purple-800 border-purple-200"
-              >
-                {" "}
-                {/* ✅ Fixed gradient */}
-                {athlete.rank} {athlete.class}
-              </Badge>
-              <Badge
-                variant="outline"
-                className="bg-gradient-linear-to-r from-emerald-500/20 to-green-500/20 text-emerald-800 border-emerald-200"
-              >
-                {" "}
-                {/* ✅ Fixed gradient */}
-                {athlete.primarySport}
-              </Badge>
-              {distance && (
-                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                  <MapPin className="w-3 h-3 mr-1" />
-                  {distance.toFixed(1)}km
-                </Badge>
-              )}
-            </div>
-
-            {/* Status */}
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
-              {isFreeAgent ? (
-                <>
-                  <UserCheck className="w-4 h-4 text-emerald-500" />
-                  <span>Free agent</span>
-                </>
-              ) : (
-                <>
-                  <Crown className="w-4 h-4 text-orange-500" />
-                  <span>In another team</span>
-                </>
-              )}
-            </div>
           </div>
 
-          {/* Invite Button */}
-          {isFreeAgent && (
-            <Button
-              size="sm"
-              className="bg-gradient-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 text-white font-semibold shadow-lg whitespace-nowrap ml-auto group-hover:scale-105 transition-all px-6"
-              onClick={() => sendInvite.mutate()}
-              disabled={sendInvite.isPending}
-            >
-              {sendInvite.isPending ? (
-                <>
-                  <span className="w-4 h-4 animate-spin rounded-full border-2 border-white/30 border-r-transparent mr-2" />
-                  Sending...
-                </>
-              ) : (
-                "Invite"
-              )}
-            </Button>
+          {/* Action Button */}
+          {canInvite && (
+            <div className="flex sm:flex-col justify-end items-end sm:items-center">
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-medium shadow-sm transition-all w-full sm:w-auto"
+                onClick={() => sendInvite.mutate()}
+                disabled={sendInvite.isPending}
+                aria-label={`Invite ${athlete.firstName} to team`}
+              >
+                {sendInvite.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Sending
+                  </>
+                ) : (
+                  "Invite"
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Already Invited State */}
+          {inviteSent && (
+            <div className="flex items-center justify-center sm:justify-end">
+              <Badge className="bg-emerald-100 text-emerald-700 border-emerald-300">
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Invited
+              </Badge>
+            </div>
           )}
         </div>
       </CardContent>

@@ -29,7 +29,7 @@ export default function TeamHeader({ team, currentUserId }: TeamHeaderProps) {
     {
       icon: Users,
       label: "Members",
-      value: team.counters?.membersCount || team.members.length,
+      value: team.members.length || "N/A",
     },
     {
       icon: Trophy,
