@@ -79,17 +79,16 @@ model Athlete {
   actorNotifications Notification[] @relation("NotificationActor")
 
   // Follower/Following
-  followers Follow[] @relation("AthleteFollowing")
-  following Follow[] @relation("AthleteFollowers")
-    // Team Following
+  followers      Follow[]     @relation("AthleteFollowing")
+  following      Follow[]     @relation("AthleteFollowers")
+  // Team Following
   teamsFollowing TeamFollow[] @relation("AthleteTeamFollowing")
-
 
   // Messaging
   conversations Conversation[] @relation("ConversationParticipants")
   messagesSent  Message[]      @relation("MessagesSent")
 
-  @@index([clerkUserId,id])
+  @@index([clerkUserId, id])
   @@index([country, state, city])
   @@index([username, firstName, email])
   @@index([latitude, longitude, primarySport])
@@ -344,7 +343,7 @@ model PhysicalEvaluationRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([OTP, guideId, athleteId,scheduledDate,scheduledTime ])
+  @@index([OTP, guideId, athleteId, scheduledDate, scheduledTime])
   @@map("physical_evaluation_requests")
 }
 
@@ -354,7 +353,7 @@ model PhysicalEvaluationRequest {
 // System-wide notification management
 model Notification {
   id        String           @id @default(uuid())
-  athleteId String  // Changed from Int to String to match User.id
+  athleteId String // Changed from Int to String to match User.id
   athlete   Athlete          @relation("AthleteNotifications", fields: [athleteId], references: [id])
   actorId   String? // Changed from Int to String to match User.id
   actor     Athlete?         @relation("NotificationActor", fields: [actorId], references: [id])
@@ -366,7 +365,7 @@ model Notification {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  @@index([athleteId, isRead,type,id, createdAt,updatedAt])
+  @@index([athleteId, isRead, type, id, createdAt, updatedAt])
 }
 
 // Notification categories
@@ -417,28 +416,28 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followingId, followerId])
 }
+
 // ============================================
 // TEAM FOLLOW SYSTEM
 // ============================================
 model TeamFollow {
-  id         String   @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // The athlete who is following the team
   followerId String
-  follower   Athlete  @relation("AthleteTeamFollowing", fields: [followerId], references: [id], onDelete: Cascade)
-  
+  follower   Athlete @relation("AthleteTeamFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+
   // The team being followed
-  teamId     String
-  team       Team     @relation("TeamFollowers", fields: [teamId], references: [id], onDelete: Cascade)
-  
-  createdAt  DateTime @default(now())
+  teamId String
+  team   Team   @relation("TeamFollowers", fields: [teamId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 
   // Prevent duplicate follows and self-follows handled in business logic
   @@unique([followerId, teamId])
   @@index([teamId, followerId])
   @@map("team_follows")
 }
-
 
 model AthleteCounters {
   athleteId      String   @id
@@ -447,7 +446,8 @@ model AthleteCounters {
   followingCount Int      @default(0)
   postsCount     Int      @default(0)
   updatedAt      DateTime @updatedAt
-  @@index([athleteId,updatedAt])
+
+  @@index([athleteId, updatedAt])
 }
 
 // ============================================
@@ -528,7 +528,7 @@ model Team {
   longitude Float?
 
   // Owner (athlete who created the team)
-  ownerId String
+  ownerId String  @unique
   owner   Athlete @relation("TeamsOwned", fields: [ownerId], references: [id])
 
   // Guide overseeing the team
@@ -547,7 +547,7 @@ model Team {
   posts             TeamPost[]
   counters          TeamCounters?
   // Team followers
-  followers TeamFollow[] @relation("TeamFollowers")
+  followers         TeamFollow[]      @relation("TeamFollowers")
 
   homeMatches           TeamMatch[]            @relation("HomeTeamMatches")
   awayMatches           TeamMatch[]            @relation("AwayTeamMatches")
@@ -561,7 +561,7 @@ model Team {
   updatedAt DateTime @updatedAt
 
   // One athlete can own at most one team at a time
-  @@unique([ownerId,id])
+  @@unique([ownerId, id])
   // Search indexes
   @@index([name])
   @@index([sport, class, rank])
@@ -570,16 +570,16 @@ model Team {
 }
 
 model TeamCounters {
-  teamId        String   @id
-  team          Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  membersCount  Int      @default(0)
-  postsCount    Int      @default(0)
-  matchesPlayed Int      @default(0)
-  followersCount Int     @default(0)  // ✅ NEW FIELD
-  updatedAt     DateTime @updatedAt
-  @@index([teamId, membersCount, postsCount, followersCount])  // ✅ UPDATED INDEX
-}
+  teamId         String   @id
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  membersCount   Int      @default(0)
+  postsCount     Int      @default(0)
+  matchesPlayed  Int      @default(0)
+  followersCount Int      @default(0) // ✅ NEW FIELD
+  updatedAt      DateTime @updatedAt
 
+  @@index([teamId, membersCount, postsCount, followersCount]) // ✅ UPDATED INDEX
+}
 
 // ============================================
 // TEAM MEMBERSHIP & INVITES
@@ -605,7 +605,7 @@ model TeamMembership {
   teamId String
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  athleteId String @unique
+  athleteId String  @unique
   athlete   Athlete @relation(fields: [athleteId], references: [id], onDelete: Cascade)
 
   role      TeamMemberRole @default(PLAYER)
@@ -616,7 +616,7 @@ model TeamMembership {
   updatedAt DateTime @updatedAt
 
   // Each athlete can only be in one team at a time (owner is also a member)
-  @@unique([athleteId,id,createdAt,updatedAt])
+  @@unique([athleteId, id, createdAt, updatedAt])
   @@index([teamId])
 }
 
@@ -638,7 +638,7 @@ model TeamInvitation {
   respondedAt DateTime?
 
   @@unique([teamId, invitedAthleteId])
-  @@index([invitedAthleteId, status,id])
+  @@index([invitedAthleteId, status, id])
 }
 
 model TeamJoinRequest {
@@ -647,7 +647,7 @@ model TeamJoinRequest {
   teamId String
   team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  athleteId String @unique
+  athleteId String  @unique
   athlete   Athlete @relation("JoinRequest_Applicant", fields: [athleteId], references: [id], onDelete: Cascade)
 
   status  TeamJoinRequestStatus @default(PENDING)
@@ -660,7 +660,7 @@ model TeamJoinRequest {
   reviewedAt DateTime?
 
   @@unique([teamId, athleteId])
-  @@index([athleteId, status,id])
+  @@index([athleteId, status, id])
 }
 
 model TeamMessage {
@@ -749,7 +749,7 @@ model TeamApplication {
   createdAt  DateTime              @default(now())
   updatedAt  DateTime              @updatedAt
 
-  @@index([guideId, status,name,longitude,latitude,createdAt,updatedAt])
+  @@index([guideId, status, name, longitude, latitude, createdAt, updatedAt])
   @@index([applicantId, status])
 }
 
@@ -836,7 +836,7 @@ model TeamMatchParticipant {
   matchId String
   match   TeamMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
 
-  athleteId String @unique
+  athleteId String  @unique
   athlete   Athlete @relation("MatchParticipantAthlete", fields: [athleteId], references: [id])
 
   teamId String

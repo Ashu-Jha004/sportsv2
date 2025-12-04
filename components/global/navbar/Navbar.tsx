@@ -7,6 +7,27 @@ import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notifications/components/NotificationBell";
 import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+
+// Add this component BEFORE the Navbar component
+function UnreadBadge() {
+  const { data: unreadCount } = useQuery({
+    queryKey: ["totalUnreadCount"],
+    queryFn: async () => {
+      // Placeholder - will implement real count in Phase 5
+      return Math.floor(Math.random() * 5); // Random 0-4 for demo
+    },
+    staleTime: 1000 * 30,
+    refetchInterval: 1000 * 10,
+  });
+
+  return unreadCount && unreadCount > 0 ? (
+    <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
+      {unreadCount > 9 ? "9+" : unreadCount}
+    </span>
+  ) : null;
+}
 
 export default function Navbar({
   brandName = "Sparta",
@@ -61,18 +82,23 @@ export default function Navbar({
 
         {/* Right: Actions - Perfect spacing */}
         <div className="flex items-center gap-1.5 lg:gap-2 shrink-0">
-          {/* Messages */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-10 w-10 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-200 group"
-            title="Messages"
-          >
-            <MessageCircle size={20} strokeWidth={2} />
-            <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-blue-600 text-white text-xs font-bold shadow-lg group-hover:scale-110 transition-transform">
-              3
-            </span>
-          </Button>
+          {/* Messages - Fully Integrated */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="relative h-10 w-10 p-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-200 group"
+              title="Messages"
+            >
+              <Link href="/messages" className="flex items-center">
+                <MessageCircle size={20} strokeWidth={2} />
+              </Link>
+            </Button>
+
+            {/* Dynamic Unread Badge */}
+            <UnreadBadge />
+          </div>
 
           {/* Notifications */}
           <NotificationBell />

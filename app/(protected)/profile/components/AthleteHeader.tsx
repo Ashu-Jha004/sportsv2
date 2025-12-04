@@ -22,6 +22,7 @@ import {
   Shield,
   Edit,
   Loader2,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +33,12 @@ import {
 import { SportBadge } from "@/components/ui/sport-badge";
 import { FollowButton } from "@/components/ui/follow-button";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import Link from "next/link";
 
 // Stats Preview Component
 function StatsPreview({
@@ -357,15 +364,38 @@ export default function AthleteHeader({
                     />
                   )}
 
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleMessageClick}
-                    className="font-semibold border-2 hover:bg-slate-50 shadow-md"
-                  >
-                    <MessageSquare size={18} className="mr-2" />
-                    Message
-                  </Button>
+                  {!followStatus?.isMutual ? (
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <TooltipContent>
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            disabled
+                            className="font-semibold border-2 opacity-50 cursor-not-allowed"
+                          >
+                            <Lock size={18} className="mr-2" />
+                            Message (Follow each other first)
+                          </Button>
+                        </TooltipContent>
+                      </TooltipTrigger>
+                    </Tooltip>
+                  ) : (
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="lg"
+                      className="font-semibold border-2 hover:bg-slate-50 shadow-md"
+                    >
+                      <Link
+                        href={`/messages?user=${athlete.username}`}
+                        className="flex items-center"
+                      >
+                        <MessageSquare size={18} className="mr-2" />
+                        Message
+                      </Link>
+                    </Button>
+                  )}
                 </>
               )}
             </div>

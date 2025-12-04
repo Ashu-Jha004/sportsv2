@@ -12,8 +12,9 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/components/ui/follow-button";
-import { Trophy } from "lucide-react";
+import { MessageSquare, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
 
 // =============================================================================
 // TYPES
@@ -66,7 +67,7 @@ export function UserCard({
             alt={fullName}
             className="object-cover"
           />
-          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold">
+          <AvatarFallback className="bg-linear-to-br from-blue-500 to-blue-600 text-white font-semibold">
             {initials || user.username[0].toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -79,7 +80,7 @@ export function UserCard({
             {user.rank && (
               <Badge
                 variant="secondary"
-                className="text-xs bg-gradient-to-r from-yellow-400 to-orange-500 text-white"
+                className="text-xs bg-linear-to-r from-yellow-400 to-orange-500 text-white"
               >
                 <Trophy size={10} className="mr-1" />
                 {user.rank}
@@ -102,14 +103,33 @@ export function UserCard({
       {/* Right: Follow Button */}
       {showFollowButton && !isCurrentUser && (
         <div className="ml-3">
-          <FollowButton
-            targetId={user.username}
-            type="athlete"
-            initialFollowing={initialFollowing}
-            displayName={fullName}
-            size="sm"
-            onFollowChange={onFollowChange}
-          />
+          {/* Right: Follow + Message Buttons */}
+          <div className="flex gap-2 ml-3">
+            <FollowButton
+              targetId={user.username}
+              type="athlete"
+              initialFollowing={initialFollowing}
+              displayName={fullName}
+              size="sm"
+              onFollowChange={onFollowChange}
+            />
+
+            {/* New: Message Button */}
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 text-xs border-slate-200 hover:bg-slate-50"
+            >
+              <Link
+                href={`/messages?user=${user.username}`}
+                className="flex items-center gap-1"
+              >
+                <MessageSquare size={14} />
+                Message
+              </Link>
+            </Button>
+          </div>
         </div>
       )}
     </div>
