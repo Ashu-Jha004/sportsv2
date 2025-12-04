@@ -5,7 +5,12 @@ import { AthleteHeaderProps } from "@/types/profile/athlete-profile.types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditProfileDialog } from "./EditProfileDialog";
+import { FollowerListModal } from "@/components/social/follower-list-modal";
+import { FollowingListModal } from "@/components/social/following-list-modal";
+import { useAthleteCounters } from "@/hooks/social/use-follow-counters";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useFollowStatus } from "@/hooks/social/use-follow-status";
+
 import {
   MessageSquare,
   MapPin,
@@ -16,6 +21,7 @@ import {
   Award,
   Shield,
   Edit,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -120,7 +126,18 @@ export default function AthleteHeader({
     () => getSportBanner(athlete.primarySport || "DEFAULT"),
     [athlete.primarySport]
   );
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
 
+  const { data: liveCounters } = useAthleteCounters(
+    athlete.username,
+    10000, // Poll every 10 seconds
+    true // Enable polling
+  );
+  const displayFollowersCount =
+    liveCounters?.followersCount ?? athlete.followersCount ?? 0;
+  const displayFollowingCount =
+    liveCounters?.followingCount ?? athlete.followingCount ?? 0;
   const handleMessageClick = useCallback(() => {
     if (onMessageUser) {
       onMessageUser();
@@ -131,6 +148,12 @@ export default function AthleteHeader({
       console.log(`Message button clicked for ${athlete.username}`);
     }
   }, [athlete.username, onMessageUser]);
+
+  const { data: followStatus, isLoading: isLoadingFollowStatus } =
+    useFollowStatus(
+      athlete.username,
+      !isOwnProfile // Only fetch if not own profile
+    );
 
   // Location string
   const location = useMemo(() => {
@@ -228,22 +251,30 @@ export default function AthleteHeader({
 
               {/* Follower Stats */}
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
-                <button className="group flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+                <button
+                  onClick={() => setShowFollowersModal(true)}
+                  className="group flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                >
                   <span className="text-2xl font-bold text-slate-900 group-hover:text-blue-600">
-                    {formatCount(athlete.followersCount || 0)}
+                    {formatCount(displayFollowersCount)}
                   </span>
                   <span className="text-slate-600 group-hover:text-blue-600">
                     Followers
                   </span>
                 </button>
-                <button className="group flex items-center gap-1.5 hover:text-blue-600 transition-colors">
+                <button
+                  onClick={() => setShowFollowingModal(true)}
+                  className="group flex items-center gap-1.5 hover:text-blue-600 transition-colors"
+                >
                   <span className="text-2xl font-bold text-slate-900 group-hover:text-blue-600">
-                    {formatCount(athlete.followingCount || 0)}
+                    {formatCount(displayFollowingCount)}
                   </span>
+
                   <span className="text-slate-600 group-hover:text-blue-600">
                     Following
                   </span>
                 </button>
+
                 <div className="flex items-center gap-1.5 text-slate-600">
                   <Trophy size={16} className="text-blue-600" />
                   <span className="font-semibold">{0} Matches</span>
@@ -306,11 +337,26 @@ export default function AthleteHeader({
                 </EditProfileDialog>
               ) : (
                 <>
-                  <FollowButton
-                    username={athlete.username}
-                    initialFollowing={isFriendProfile}
-                    size="lg"
-                  />
+                  {isLoadingFollowStatus ? (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      disabled
+                      className="font-semibold border-2 shadow-md"
+                    >
+                      <Loader2 size={18} className="mr-2 animate-spin" />
+                      Loading...
+                    </Button>
+                  ) : (
+                    <FollowButton
+                      targetId={athlete.username}
+                      type="athlete"
+                      initialFollowing={followStatus?.isFollowing || false}
+                      displayName={`${athlete.firstName} ${athlete.lastName}`}
+                      size="lg"
+                    />
+                  )}
+
                   <Button
                     variant="outline"
                     size="lg"
@@ -334,6 +380,20 @@ export default function AthleteHeader({
           <StatsPreview wins={0} losses={0} totalMatches={0} />
         </div>
       </div>
+      {/* Modals */}
+      <FollowerListModal
+        username={athlete.username}
+        isOpen={showFollowersModal}
+        onClose={() => setShowFollowersModal(false)}
+        currentUserId={athlete.id}
+      />
+
+      <FollowingListModal
+        username={athlete.username}
+        isOpen={showFollowingModal}
+        onClose={() => setShowFollowingModal(false)}
+        currentUserId={athlete.id}
+      />
     </section>
   );
 }

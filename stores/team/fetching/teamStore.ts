@@ -59,9 +59,11 @@ export const useTeamStore = create<TeamStore>()(
         }));
       },
 
-      toggleFollowing: () =>
-        set((state) => ({ isFollowing: !state.isFollowing })),
-
+      toggleFollowing: () => {
+        console.warn(
+          "[teamStore] toggleFollowing is deprecated - use FollowButton component"
+        );
+      },
       // ✅ FIXED: Type-safe partial updates
       updateCounts: (counts) => {
         set((state) => ({

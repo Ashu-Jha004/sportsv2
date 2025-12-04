@@ -9,7 +9,8 @@ import { getTeamPermissions } from "../../lib/utils/teamPermissions";
 import { TeamWithRelations } from "../../lib/types/team";
 import { Users, MapPin, Trophy, Heart, UserPlus, LogOut } from "lucide-react";
 import { tokens } from "@/lib/design-tokens";
-
+import { FollowButton } from "@/components/ui/follow-button";
+import { useTeamCounters } from "@/hooks/social/use-follow-counters";
 interface TeamHeaderProps {
   team: TeamWithRelations;
   currentUserId: string | null;
@@ -18,6 +19,14 @@ interface TeamHeaderProps {
 export default function TeamHeader({ team, currentUserId }: TeamHeaderProps) {
   const { isFollowing, toggleFollowing, followerCount } = useTeamStore();
   const permissions = getTeamPermissions(team, currentUserId);
+  // Real-time counter updates
+  const { data: liveCounters } = useTeamCounters(team.id, 10000, true);
+
+  // Use live counters if available
+  const displayFollowerCount = liveCounters?.followersCount ?? followerCount;
+  const displayMemberCount = liveCounters?.membersCount ?? team.members.length;
+  const displayMatchCount =
+    liveCounters?.matchesPlayed ?? team.counters?.matchesPlayed ?? 0;
 
   const sportBadges = [
     { label: team.sport, variant: "default" as const },
@@ -29,17 +38,17 @@ export default function TeamHeader({ team, currentUserId }: TeamHeaderProps) {
     {
       icon: Users,
       label: "Members",
-      value: team.members.length || "N/A",
+      value: displayMemberCount || "N/A",
     },
     {
       icon: Trophy,
       label: "Matches",
-      value: team.counters?.matchesPlayed || 0,
+      value: displayMatchCount,
     },
     {
       icon: Heart,
       label: "Followers",
-      value: followerCount,
+      value: displayFollowerCount,
     },
   ];
 
@@ -124,24 +133,18 @@ export default function TeamHeader({ team, currentUserId }: TeamHeaderProps) {
 
                 {/* Follow Button - More Prominent */}
                 <div className="shrink-0">
-                  <Button
+                  <FollowButton
+                    targetId={team.id}
+                    type="team"
+                    initialFollowing={isFollowing}
+                    displayName={team.name}
                     size="lg"
-                    variant={isFollowing ? "outline" : "default"}
-                    onClick={toggleFollowing}
                     className="w-full md:w-auto min-w-[140px]"
-                  >
-                    {isFollowing ? (
-                      <>
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Following
-                      </>
-                    ) : (
-                      <>
-                        <Heart className="w-4 h-4 mr-2" />
-                        Follow
-                      </>
-                    )}
-                  </Button>
+                    onFollowChange={(following) => {
+                      // Update Zustand store
+                      useTeamStore.setState({ isFollowing: following });
+                    }}
+                  />
                 </div>
 
                 {permissions.isMember && !permissions.isOwner && (

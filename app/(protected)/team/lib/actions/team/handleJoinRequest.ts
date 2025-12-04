@@ -149,6 +149,10 @@ export async function handleTeamJoinRequest({
             })
           )
         );
+
+        await tx.teamJoinRequest.delete({
+          where: { id: requestId },
+        });
       });
     } else {
       // REJECT - just update status
