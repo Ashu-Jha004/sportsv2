@@ -2,20 +2,30 @@
 
 import React, { useState, useCallback, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Info, Camera, ListChecks, BarChart2, Loader2 } from "lucide-react";
+import {
+  Info,
+  Camera,
+  ListChecks,
+  BarChart2,
+  Loader2,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { GroupIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AboutTab from "./AboutTab";
 import MediaTab from "./MediaTab";
 import MatchTab from "./MatchTab";
 import StatsTab from "./StatTab";
 import { useAthleteStats } from "../hooks/profile/useAthleteStats";
+import TeamTab from "./TeamTab";
 
 const TABS = [
   { id: "about", label: "About", icon: Info },
   { id: "media", label: "Media", icon: Camera },
   { id: "match", label: "Matches", icon: ListChecks },
   { id: "stats", label: "Stats", icon: BarChart2 },
+  { id: "Team", label: "Team", icon: Users },
 ] as const;
 
 export default function AthleteBody({
@@ -25,7 +35,7 @@ export default function AthleteBody({
   isOwnProfile,
 }: any) {
   const [activeSection, setActiveSection] = useState<
-    "about" | "media" | "match" | "stats"
+    "about" | "media" | "match" | "stats" | "Team"
   >("about");
   const [isPending, startTransition] = useTransition();
   const {
@@ -117,6 +127,14 @@ export default function AthleteBody({
                 isOwnProfile={isOwnProfile}
                 username={athlete.username}
                 isLoading={statsLoading}
+              />
+            )}
+            {activeSection === "Team" && (
+              <TeamTab
+                isOwnProfile={isOwnProfile}
+                username={athlete.username}
+                isLoadings={statsLoading}
+                profileData={athlete}
               />
             )}
           </motion.div>

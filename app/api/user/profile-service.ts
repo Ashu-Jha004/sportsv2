@@ -187,6 +187,7 @@ export async function getOwnProfileService(
           following: true,
         },
       },
+      teamMembership: true,
     },
   });
 
@@ -211,6 +212,7 @@ export async function getOwnProfileService(
       where: { id: athlete.id },
       include: {
         counters: true,
+        teamMembership: true,
         _count: {
           select: {
             followers: true,
@@ -243,6 +245,7 @@ export async function getAthleteByIdService(athleteId: any) {
     where: { clerkUserId: athleteId },
     include: {
       counters: true,
+      teamMembership: true,
       _count: {
         select: {
           followers: true,
@@ -265,15 +268,14 @@ export async function getAthleteByIdService(athleteId: any) {
  *
  * @throws {AthleteNotFoundError} If athlete not found
  */
-export async function getAthleteByUsernameService(
-  username: any
-) {
+export async function getAthleteByUsernameService(username: any) {
   console.log("📋 Fetching athlete by username:", username);
 
   const athlete = await prisma.athlete.findUnique({
     where: { username },
     include: {
       counters: true,
+      teamMembership: true,
       _count: {
         select: {
           followers: true,
