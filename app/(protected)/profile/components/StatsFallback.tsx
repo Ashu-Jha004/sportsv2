@@ -15,15 +15,13 @@ export function StatsFallback({ isSelf }: { isSelf: boolean }) {
         evaluates them, their performance stats will appear here.
       </p>
 
-      {isSelf && (
-        <Button
-          variant="default"
-          className="mt-2"
-          onClick={() => openDialog({ sportFilter: "primary" })}
-        >
-          Find Nearest Guide..
-        </Button>
-      )}
+      <Button
+        variant="default"
+        className="mt-2"
+        onClick={() => openDialog({ sportFilter: "primary" })}
+      >
+        Find Nearest Guide..
+      </Button>
     </section>
   );
 }

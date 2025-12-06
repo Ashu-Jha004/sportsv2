@@ -24,7 +24,7 @@ export default function TeamTabs({ team, currentUserId }: TeamTabsProps) {
   const membersCount = team.members?.length || 0;
   const postsCount = team.counters?.postsCount || team.recentPosts?.length || 0;
   const matchesCount = team.counters?.matchesPlayed || 0;
-  console.log("counter", team);
+  console.log("can post", permissions);
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       {/* Tab Navigation - Responsive */}
@@ -117,7 +117,9 @@ export default function TeamTabs({ team, currentUserId }: TeamTabsProps) {
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900">
               Team Posts
             </h3>
-            {permissions.canPost && <CreatePostDialog teamId={team.id} />}
+            {permissions?.canCreatePost === true && (
+              <CreatePostDialog teamId={team.id} />
+            )}
           </div>
           <PostsFeedInfinite teamId={team.id} />
         </TabsContent>
