@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { validateAdminAuth, hasPermission } from "@/lib/admin/admin-auth";
 import AdminModeratorsPanel from "./components/AdminPannel"; // We'll create this component
-
+export const dynamic = "force-dynamic";
 export default async function AdminModeratorsPage() {
   try {
     console.log("🔍 Admin page: Validating admin access");

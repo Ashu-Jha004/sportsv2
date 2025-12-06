@@ -12,7 +12,7 @@ import {
   generateTraceId,
   type AdminUser,
 } from "@/lib/admin/admin-auth";
-
+export const dynamic = "force-dynamic";
 // =============================================================================
 // VALIDATION SCHEMAS
 // =============================================================================
