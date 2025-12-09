@@ -29,10 +29,22 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.immediate.co.uk",
+        port: "",
+        pathname: "/**",
+      },
       // Add your CDN domains here
       {
         protocol: "https",
         hostname: "i.pinimg.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.immediate.co.uk",
         port: "",
         pathname: "/**",
       },
