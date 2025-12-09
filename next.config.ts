@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
       // Add your CDN domains here
       {
         protocol: "https",
-        hostname: "images.immediate.co.uk",
+        hostname: "i.pinimg.com",
         port: "",
         pathname: "/**",
       },
