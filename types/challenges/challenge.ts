@@ -168,3 +168,74 @@ export interface NegotiationHistory {
   message: string | null;
   createdAt: Date;
 }
+
+// ============================================
+// SENT CHALLENGES
+// ============================================
+
+export interface SentChallengeFilters {
+  status?: "PENDING" | "NEGOTIATING" | "ACCEPTED" | "REJECTED" | "ALL";
+  sport?: Sport | "ALL";
+  teamName?: string;
+}
+
+export interface SentChallengeCardData {
+  matchId: string;
+  challengedTeamId: string;
+  challengedTeamName: string;
+  challengedTeamLogo: string | null;
+  challengedTeamSport: Sport;
+  challengedTeamSchool: string | null;
+  // Current Match Details (could be your original OR their counter)
+  proposedDate: Date | null;
+  proposedTime: string | null;
+  proposedLocation: string;
+  proposedLatitude: number | null;
+  proposedLongitude: number | null;
+  matchDurationMinutes: number | null;
+  // Original proposal (for comparison)
+  originalProposedDate: Date | null;
+  originalProposedTime: string | null;
+  originalProposedLocation: string;
+  originalMatchDurationMinutes: number | null;
+  // Status
+  status: "PENDING_CHALLENGE" | "SCHEDULING" | "SCHEDULED" | "REJECTED";
+  challengerAccepted: boolean;
+  challengedAccepted: boolean;
+  // Negotiation tracking
+  hasCounterProposal: boolean;
+  isAwaitingYourResponse: boolean;
+  lastModifiedBy: string | null;
+  // For rejection
+  rejectionReason: string | null;
+  // Metadata
+  createdAt: Date;
+  daysRemaining: number;
+  isExpiringSoon: boolean;
+}
+
+export interface SentChallengesResponse {
+  challenges: SentChallengeCardData[];
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
+export interface SentChallengeActionRequest {
+  matchId: string;
+  action: "ACCEPT_COUNTER" | "COUNTER_AGAIN" | "CANCEL";
+  // For COUNTER_AGAIN
+  proposedDate?: Date | null;
+  proposedTime?: string;
+  proposedLocation?: string;
+  proposedLatitude?: number | null;
+  proposedLongitude?: number | null;
+  matchDurationMinutes?: number | null;
+  counterMessage?: string;
+}
+
+export interface SentChallengeActionResponse {
+  success: boolean;
+  action: string;
+  message: string;
+  error?: string;
+}
