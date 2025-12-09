@@ -88,3 +88,83 @@ export interface ChallengePermissions {
   reason?: string; // Why they can't challenge
   userRole?: string;
 }
+
+// ============================================
+// RECEIVED CHALLENGES
+// ============================================
+
+export interface ReceivedChallengeFilters {
+  status?: "PENDING" | "NEGOTIATING" | "ALL";
+  sport?: Sport | "ALL";
+  teamName?: string;
+}
+
+export interface ReceivedChallengeCardData {
+  matchId: string;
+  challengerTeamId: string;
+  challengerTeamName: string;
+  challengerTeamLogo: string | null;
+  challengerTeamSport: Sport;
+  challengerTeamSchool: string | null;
+  // Match Details
+  proposedDate: Date | null;
+  proposedTime: string | null;
+  proposedLocation: string;
+  proposedLatitude: number | null;
+  proposedLongitude: number | null;
+  matchDurationMinutes: number | null;
+  messageFromChallenger: string | null;
+  // Status
+  status: "PENDING_CHALLENGE" | "SCHEDULING";
+  challengerAccepted: boolean;
+  challengedAccepted: boolean;
+  // Negotiation tracking
+  negotiationCount: number;
+  lastModifiedBy: string | null;
+  // Metadata
+  createdAt: Date;
+  daysRemaining: number;
+  isExpiringSoon: boolean; // < 2 days
+}
+
+export interface ReceivedChallengesResponse {
+  challenges: ReceivedChallengeCardData[];
+  hasMore: boolean;
+  nextCursor?: string;
+}
+
+export interface ChallengeActionRequest {
+  matchId: string;
+  action: "ACCEPT" | "REJECT" | "COUNTER" | "DELETE";
+  // For REJECT
+  rejectionReason?: string;
+  // For COUNTER
+  proposedDate?: Date | null;
+  proposedTime?: string;
+  proposedLocation?: string;
+  proposedLatitude?: number | null;
+  proposedLongitude?: number | null;
+  matchDurationMinutes?: number | null;
+  counterMessage?: string;
+}
+
+export interface ChallengeActionResponse {
+  success: boolean;
+  action: string;
+  message: string;
+  error?: string;
+}
+
+export interface NegotiationHistory {
+  id: string;
+  matchId: string;
+  modifiedBy: string;
+  modifiedByTeamName: string;
+  action: string;
+  proposedDate: Date | null;
+  proposedTime: string | null;
+  proposedLocation: string;
+  matchDurationMinutes: number | null;
+  message: string | null;
+  createdAt: Date;
+}

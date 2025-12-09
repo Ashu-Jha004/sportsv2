@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ChallengeFilterHeader } from "./_components/sent/challenges/challenge-filter-header";
 import { ChallengeGrid } from "./_components/sent/challenges/challenge-grid";
 import { ChallengeWizard } from "./_components/sent/challenges/challenge-wizard/challenge-wizard";
 import { useChallengeStore } from "@/stores/challenges/challenge-store";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function ChallengePage() {
   const searchParams = useSearchParams();
@@ -23,10 +24,20 @@ export default function ChallengePage() {
   }, [searchParams, initializeFromURL]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <ChallengeFilterHeader />
-      <ChallengeGrid />
-      <ChallengeWizard />
-    </div>
+    <>
+      <Suspense
+        fallback={
+          <div>
+            <LoadingSpinner />
+          </div>
+        }
+      >
+        <div className="min-h-screen bg-background">
+          <ChallengeFilterHeader />
+          <ChallengeGrid />
+          <ChallengeWizard />
+        </div>
+      </Suspense>
+    </>
   );
 }
