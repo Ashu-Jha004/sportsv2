@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "biome check",
     "postinstall": "prisma generate",
+    "type-check": "tsc --noEmit",
     "format": "biome format --write"
   },
   "dependencies": {

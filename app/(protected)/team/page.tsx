@@ -43,14 +43,14 @@ export default function TeamPage() {
             icon={Search}
             label="Find a team"
             description="Discover nearby or sport‑specific teams and send a join request in seconds."
-            href="/team/discover"
+            href="/discover"
           />
 
           <ActionCard
             icon={Swords}
             label="Challenge a team"
             description="Issue match challenges, schedule games, and track competitive results."
-            href="/team/challenges"
+            href="/challenges"
           />
         </section>
       </div>

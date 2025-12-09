@@ -145,16 +145,6 @@ export default function AthleteHeader({
     liveCounters?.followersCount ?? athlete.followersCount ?? 0;
   const displayFollowingCount =
     liveCounters?.followingCount ?? athlete.followingCount ?? 0;
-  const handleMessageClick = useCallback(() => {
-    if (onMessageUser) {
-      onMessageUser();
-    } else {
-      toast.success(`Opening chat with ${athlete.username}`, {
-        description: "This feature is coming soon!",
-      });
-      console.log(`Message button clicked for ${athlete.username}`);
-    }
-  }, [athlete.username, onMessageUser]);
 
   const { data: followStatus, isLoading: isLoadingFollowStatus } =
     useFollowStatus(
@@ -190,7 +180,7 @@ export default function AthleteHeader({
         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
 
         {/* Edit Button (Own Profile) */}
-        {isOwnProfile && (
+        <EditProfileDialog>
           <Button
             variant="secondary"
             size="sm"
@@ -199,7 +189,7 @@ export default function AthleteHeader({
             <Edit size={16} className="mr-2" />
             Edit Profile
           </Button>
-        )}
+        </EditProfileDialog>
       </div>
 
       {/* Profile Card */}

@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 // Gemini 2.0 Flash - Free tier (15 RPM, 1M TPM, 1.5M tokens/day)
-export const GEMINI_MODEL = "gemini-2.5-pro";
+export const GEMINI_MODEL = "gemini-2.5-flash";
 
 // Safety settings
 export const safetySettings: any = [

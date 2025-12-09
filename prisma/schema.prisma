@@ -514,6 +514,7 @@ model Team {
   name    String
   bio     String?
   logoUrl String?
+  TeamSchool String?
 
   // Classification / search
   sport Sport
@@ -564,6 +565,7 @@ model Team {
   @@unique([ownerId, id])
   // Search indexes
   @@index([name])
+   @@index([TeamSchool])
   @@index([sport, class, rank])
   @@index([country, state, city])
   @@index([status])
@@ -729,6 +731,7 @@ model TeamApplication {
 
   // Proposed team details (snapshot)
   name      String
+  TeamSchool       String?
   sport     Sport
   class     Class?
   rank      Rank?

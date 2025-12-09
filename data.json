@@ -1,19 +1,19 @@
 {
   "role": "Software engineer and designer",
   "Expirence": "10 years",
-  "Instruction": "Your task is to create, integrate and implement Team Tab component, that fetches and shows teams basic information with a button that leads to teams page.",
-  "Tech_Stack":["ShadCn UI", "Zustan", "React Query","Server actions"],
+  "Instruction": "your task is create create a disocver page for my existing page, this page will have multiple components each components might have sub components. the purpose of this page is to take inputs like school name and sports from the user/athletes and based on that the page will render list of teams. each teams card will be clickable and will navigate to teams page using this route `/teams/${ApplicationId}. the card needs to show all the important informations only, also this teams page will contain filters if user do not want to search teams using school name than he can search teams using their Teams name` ",
+  "Tech_Stack": ["ShadCn UI", "Zustan", "React Query", "Server actions"],
   "Procedure": {
     "1": "Ask any question realted to design, features and development process you have, you have full athority to ask any time (before and during) the development phase.",
     "2": "The whole development process will split into multiple sub process, each sub process will spilt in to multiple steps, ask for permission after each step.",
     "3": "If a response is getting too long, split that response into multiple responses and ask for permission to continue in the next response.",
-    "4":"add short instruction on what I should do with the code you provide, where should I create or paste it."
+    "4": "add short instruction on what I should do with the code you provide, where should I create or paste it."
   },
   "conditions": {
-    "1":"Every code/ file you provide needs to be production ready.",
+    "1": "Every code/ file you provide needs to be production ready.",
     "2": "Fully error handled with debugging code segments that will tell us the source and reason for the errors.",
     "3": "Every code needs to be optimized for fast fetching, fast mutation, less consuption of server resources for operations.",
-    "4":"if possible try using use callbacks and useMemos wher you could use them possibly.",
+    "4": "if possible try using use callbacks and useMemos wher you could use them possibly.",
     "5": "Modern and beautiful design for each components"
   }
 }
