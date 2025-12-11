@@ -80,7 +80,7 @@ export function useTeamCounters(
     },
     enabled,
     staleTime: 5000,
-    refetchInterval: pollingInterval,
+    refetchInterval: false,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
   });

@@ -11,6 +11,7 @@ import { TeamWithRelations } from "../../lib/types/team";
 import { Users, MessageCircle, Trophy, Info } from "lucide-react";
 import CreatePostDialog from "./posts/CreatePostDialog";
 import { Badge } from "@/components/ui/badge";
+import Training from "./Training/Trainning";
 
 interface TeamTabsProps {
   team: TeamWithRelations;
@@ -24,7 +25,6 @@ export default function TeamTabs({ team, currentUserId }: TeamTabsProps) {
   const membersCount = team.members?.length || 0;
   const postsCount = team.counters?.postsCount || team.recentPosts?.length || 0;
   const matchesCount = team.counters?.matchesPlayed || 0;
-  console.log("can post", permissions);
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       {/* Tab Navigation - Responsive */}
@@ -95,6 +95,23 @@ export default function TeamTabs({ team, currentUserId }: TeamTabsProps) {
               {matchesCount}
             </Badge>
           </TabsTrigger>
+
+          <TabsTrigger
+            value="Training"
+            className="relative flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-3 sm:py-4 border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-emerald-50/50 rounded-t-lg transition-all"
+          >
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-xs sm:text-sm font-medium hidden sm:inline">
+              Training
+            </span>
+            <span className="text-xs font-medium sm:hidden">Games</span>
+            <Badge
+              variant="secondary"
+              className="absolute -top-1 -right-1 sm:relative sm:top-auto sm:right-auto h-5 min-w-5 text-xs px-1.5"
+            >
+              1
+            </Badge>
+          </TabsTrigger>
         </TabsList>
       </div>
 
@@ -134,6 +151,18 @@ export default function TeamTabs({ team, currentUserId }: TeamTabsProps) {
             </p>
           </div>
           <MatchesList teamId={team.id} />
+        </TabsContent>
+
+        <TabsContent value="Training" className="mt-0">
+          <div className="mb-6">
+            <h3 className="text-xl sm:text-2xl align-middle justify-center flex font-bold text-slate-900">
+              Training Schedule!
+            </h3>
+            <p className="text-sm align-middle justify-center flex text-slate-600 mt-1">
+              View How This Team Train's ?
+            </p>
+          </div>
+          <Training />
         </TabsContent>
       </div>
     </Tabs>

@@ -1,7 +1,7 @@
 {
   "role": "Software engineer and designer",
   "Expirence": "10 years",
-  "Instruction": "your task is create create a disocver page for my existing page, this page will have multiple components each components might have sub components. the purpose of this page is to take inputs like school name and sports from the user/athletes and based on that the page will render list of teams. each teams card will be clickable and will navigate to teams page using this route `/teams/${ApplicationId}. the card needs to show all the important informations only, also this teams page will contain filters if user do not want to search teams using school name than he can search teams using their Teams name` ",
+  "Instruction": "your task is create and integrate a new feature in the existing application, feature is: team captain or team owner is allowed to create a team trainning plan for which team members have to follow, team captain can edit them or create new trainning plan.",
   "Tech_Stack": ["ShadCn UI", "Zustan", "React Query", "Server actions"],
   "Procedure": {
     "1": "Ask any question realted to design, features and development process you have, you have full athority to ask any time (before and during) the development phase.",
