@@ -1,4 +1,4 @@
-// app/api/athlete/profile/update/route.ts
+// app/api/profile/update/route.ts
 
 /**
  * =============================================================================

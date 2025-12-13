@@ -1,7 +1,7 @@
 {
   "role": "Software engineer and designer",
   "Expirence": "10 years",
-  "Instruction": "your task is create and integrate a new feature in the existing application, feature is: team captain or team owner is allowed to create a team trainning plan for which team members have to follow, team captain can edit them or create new trainning plan.",
+  "Instruction": "Your task is to refactor the code which I'll provide one by one for speed and optimization, know that we have less resourses. Reduce unsessesary or extra fetch or post request, reduce fetch and post request time.",
   "Tech_Stack": ["ShadCn UI", "Zustan", "React Query", "Server actions"],
   "Procedure": {
     "1": "Ask any question realted to design, features and development process you have, you have full athority to ask any time (before and during) the development phase.",
@@ -13,7 +13,6 @@
     "1": "Every code/ file you provide needs to be production ready.",
     "2": "Fully error handled with debugging code segments that will tell us the source and reason for the errors.",
     "3": "Every code needs to be optimized for fast fetching, fast mutation, less consuption of server resources for operations.",
-    "4": "if possible try using use callbacks and useMemos wher you could use them possibly.",
-    "5": "Modern and beautiful design for each components"
+    "4": "if possible try using use callbacks and useMemos wher you could use them possibly."
   }
 }

@@ -2,71 +2,117 @@
 
 import * as React from "react";
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import AthleteHeader from "../components/AthleteHeader";
 import AthleteBody from "../components/AthleteBody";
+import {
+  useAthleteProfile,
+  useOwnProfile,
+} from "../hooks/profile/use-athlete-profile";
 import type {
-  AthleteProfile,
   AthleteStats,
   MediaItem,
   MatchHistory,
 } from "@/types/profile/athlete-profile.types";
-import { Sport } from "../schemas/edit-profile-schema";
-// import { useAthleteStats } from "../hooks/profile/useAthleteStats";
 
 interface PageProps {
-  // Next 16: params is a Promise and must be unwrapped with React.use()
-  params: Promise<{ username?: string }>;
-}
-
-async function fetchAthleteProfile(
-  username: string | undefined,
-  isOwnProfile: boolean
-): Promise<AthleteProfile> {
-  const url = isOwnProfile
-    ? "/api/user/current"
-    : `/api/user/${encodeURIComponent(username!)}`;
-
-  const response = await fetch(url, { credentials: "include" });
-  const data = await response.json();
-
-  if (!response.ok || !data?.success || !data?.data) {
-    throw new Error(data?.error || "Failed to load profile");
-  }
-
-  return data.data as AthleteProfile;
+  params: Promise<{ username: string }>;
 }
 
 export default function DynamicProfilePage({ params }: PageProps) {
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded: isClerkLoaded, isSignedIn } = useUser();
+  const router = useRouter();
 
-  // ✅ Next 16: unwrap params Promise once
+  // ✅ Unwrap params
   const { username: routeUsername } = React.use(params);
 
-  // /profile        -> own profile (no username)
-  // /profile/[user] -> public profile
-  const isOwnProfile = routeUsername == null;
-  const isFriendProfile = !isOwnProfile;
+  // ✅ Get username from Clerk (check both locations)
+  const clerkUsername = React.useMemo(() => {
+    // Try native username first
+    if (user?.username) return user.username;
 
-  // ✅ React Query for profile (cached, avoids redundant calls)
+    // Fallback to publicMetadata (your onboarding uses this)
+    if (user?.publicMetadata?.username) {
+      return user.publicMetadata.username as string;
+    }
+
+    return null;
+  }, [user]);
+
+  // 🐛 COMPREHENSIVE DEBUG
+  console.log("=".repeat(60));
+  console.log("🔍 PROFILE PAGE DEBUG");
+  console.log("=".repeat(60));
+  console.log("📍 Route username:", routeUsername);
+  console.log("🔐 Clerk isLoaded:", isClerkLoaded);
+  console.log("🔐 Clerk isSignedIn:", isSignedIn);
+  console.log("👤 Clerk user.username:", user?.username);
+  console.log(
+    "👤 Clerk publicMetadata.username:",
+    user?.publicMetadata?.username
+  );
+  console.log("✅ Final username used:", clerkUsername);
+  console.log("=".repeat(60));
+
+  // ✅ Determine ownership
+  const [isOwnProfile, setIsOwnProfile] = React.useState(false);
+  const isFriendProfile = !isOwnProfile && !!routeUsername;
+
+  // Check ownership (improved logic)
+  React.useEffect(() => {
+    if (!isClerkLoaded) {
+      console.log("⏳ Clerk still loading...");
+      return;
+    }
+
+    if (!isSignedIn || !user) {
+      console.log("❌ User not signed in or user object null");
+      setIsOwnProfile(false);
+      return;
+    }
+
+    if (!clerkUsername) {
+      console.log("⚠️ User signed in but username not set");
+      setIsOwnProfile(false);
+      return;
+    }
+
+    const viewingOwn = routeUsername === clerkUsername;
+
+    console.log("✅ Ownership check complete:", {
+      routeUsername,
+      clerkUsername,
+      isOwnProfile: viewingOwn,
+    });
+
+    setIsOwnProfile(viewingOwn);
+  }, [isClerkLoaded, isSignedIn, user, clerkUsername, routeUsername]);
+
+  // ✅ Fetch own profile (only if signed in and viewing own)
   const {
-    data: profileData,
-    isPending,
-    isError,
-    error,
-  } = useQuery<AthleteProfile>({
-    queryKey: ["athlete-profile", isOwnProfile ? "me" : routeUsername],
-    queryFn: () => fetchAthleteProfile(routeUsername, isOwnProfile),
-    enabled: isLoaded && (isOwnProfile || !!routeUsername),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1,
-  });
+    data: ownProfileData,
+    isPending: isOwnPending,
+    isError: isOwnError,
+    error: ownError,
+  } = useOwnProfile(isClerkLoaded && isSignedIn && isOwnProfile);
 
-  // Stats – can be wired later
+  // ✅ Fetch public profile
+  const {
+    data: publicProfileData,
+    isPending: isPublicPending,
+    isError: isPublicError,
+    error: publicError,
+  } = useAthleteProfile(routeUsername || "", isClerkLoaded && isFriendProfile);
+
+  // ✅ Select data source
+  const profileData = isOwnProfile ? ownProfileData : publicProfileData;
+  const isPending = isOwnProfile ? isOwnPending : isPublicPending;
+  const isError = isOwnProfile ? isOwnError : isPublicError;
+  const error = isOwnProfile ? ownError : publicError;
+
+  // ✅ Mock data
   const statsData: AthleteStats | null = null;
-  // const { data: statsData } = useAthleteStats(profileData?.id);
 
-  // Mock media & matches (only derived when profile exists)
   const mediaData: MediaItem[] = React.useMemo(
     () =>
       profileData
@@ -97,7 +143,7 @@ export default function DynamicProfilePage({ params }: PageProps) {
             {
               id: "1",
               date: "2025-11-15",
-              sport: Sport.CRICKET,
+              sport: "CRICKET" as any,
               matchType: "TOURNAMENT",
               opponent: "City Rivals FC",
               result: "WIN",
@@ -108,7 +154,7 @@ export default function DynamicProfilePage({ params }: PageProps) {
             {
               id: "2",
               date: "2025-11-10",
-              sport: Sport.CRICKET,
+              sport: "CRICKET" as any,
               matchType: "LEAGUE",
               opponent: "State Champions",
               result: "LOSS",
@@ -121,8 +167,11 @@ export default function DynamicProfilePage({ params }: PageProps) {
     [profileData]
   );
 
-  // Loading (wait for Clerk + query)
-  if (!isLoaded || isPending) {
+  // ============================================================================
+  // LOADING
+  // ============================================================================
+
+  if (!isClerkLoaded || isPending) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center gap-3">
@@ -135,7 +184,10 @@ export default function DynamicProfilePage({ params }: PageProps) {
     );
   }
 
-  // Error
+  // ============================================================================
+  // ERROR
+  // ============================================================================
+
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -151,7 +203,10 @@ export default function DynamicProfilePage({ params }: PageProps) {
     );
   }
 
-  // Not found
+  // ============================================================================
+  // NOT FOUND
+  // ============================================================================
+
   if (!profileData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -166,6 +221,10 @@ export default function DynamicProfilePage({ params }: PageProps) {
       </div>
     );
   }
+
+  // ============================================================================
+  // SUCCESS
+  // ============================================================================
 
   return (
     <div className="min-h-screen bg-slate-50">

@@ -18,9 +18,7 @@ import type { AthleteWithCounts, OwnProfileResponse } from "./athlete.types";
  * Format user's own profile with full data access
  * Includes private information like email, DOB, exact coordinates
  */
-export function formatOwnProfile(
-  athlete: AthleteWithCounts
-): OwnProfileResponse {
+export function formatOwnProfile(athlete: any): any {
   return {
     // Identity
     clerkUserId: athlete.clerkUserId,

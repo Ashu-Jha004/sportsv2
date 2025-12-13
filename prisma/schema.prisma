@@ -93,11 +93,35 @@ exerciseCompletions ExerciseCompletion[]  @relation("ExerciseCompletions")
 uploadedFootage   TrainingFootage[]   @relation("FootageUploads")
 
 
-@@index([clerkUserId, id])
-@@index([country, state, city])
-@@index([username, firstName, email])
-@@index([latitude, longitude, primarySport])
-@@index([roles])
+@@index([clerkUserId])                     // ✅ User authentication
+  @@index([username])                        // ✅ Profile lookup by username
+  @@index([email])                           // ✅ Email lookup (login/uniqueness)
+
+  // Search optimization
+  @@index([firstName])                       // ✅ Name search (separate is faster)
+  @@index([lastName])                        // ✅ Name search (separate is faster)
+  @@index([onboardingComplete])              // ✅ Filter completed profiles
+
+  // Filtering
+  @@index([primarySport])                    // ✅ Sport filtering
+  @@index([country])                         // ✅ Location filtering
+  @@index([city])                            // ✅ City-specific searches
+
+  // Composite indexes (for combined queries)
+  @@index([country, state, city])            // ✅ Full location hierarchy
+  @@index([onboardingComplete, primarySport]) // ✅ Common search filter combo
+
+  // Sorting
+  @@index([createdAt])                       // ✅ Sort by join date
+  @@index([rank])                            // ✅ Leaderboards/rankings
+
+  // Role-based access
+  @@index([roles])                           // ✅ Admin/moderator queries
+
+  // Geo-search (if you use location-based features)
+  @@index([latitude, longitude])             // ✅ Nearby athletes (keep if needed)
+
+  @@map("Athlete")
 }
 
 model Guide {

@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { EditProfileDialog } from "./EditProfileDialog";
 import { FollowerListModal } from "@/components/social/follower-list-modal";
 import { FollowingListModal } from "@/components/social/following-list-modal";
-import { useAthleteCounters } from "@/hooks/social/use-follow-counters";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useFollowStatus } from "@/hooks/social/use-follow-status";
 
@@ -19,7 +18,6 @@ import {
   Target,
   TrendingUp,
   Award,
-  Shield,
   Edit,
   Loader2,
   Lock,
@@ -32,7 +30,6 @@ import {
 } from "@/lib/design-system/utils";
 import { SportBadge } from "@/components/ui/sport-badge";
 import { FollowButton } from "@/components/ui/follow-button";
-import { toast } from "sonner";
 import {
   Tooltip,
   TooltipContent,
@@ -40,8 +37,11 @@ import {
 } from "@/components/ui/tooltip";
 import Link from "next/link";
 
-// Stats Preview Component
-function StatsPreview({
+// =============================================================================
+// STATS PREVIEW COMPONENT (Memoized)
+// =============================================================================
+
+const StatsPreview = React.memo(function StatsPreview({
   wins = 0,
   losses = 0,
   totalMatches = 0,
@@ -50,8 +50,10 @@ function StatsPreview({
   losses?: number;
   totalMatches?: number;
 }) {
-  const winRate =
-    totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(1) : "0";
+  const winRate = useMemo(
+    () => (totalMatches > 0 ? ((wins / totalMatches) * 100).toFixed(1) : "0"),
+    [wins, totalMatches]
+  );
 
   return (
     <div className="grid grid-cols-3 gap-3 sm:gap-4">
@@ -89,10 +91,13 @@ function StatsPreview({
       </div>
     </div>
   );
-}
+});
 
-// Role Badge Component
-function RoleBadge({ role }: { role: string }) {
+// =============================================================================
+// ROLE BADGE COMPONENT (Memoized)
+// =============================================================================
+
+const RoleBadge = React.memo(function RoleBadge({ role }: { role: string }) {
   const roleColors: Record<string, { bg: string; text: string; icon: string }> =
     {
       ATHLETE: { bg: "bg-blue-100", text: "text-blue-700", icon: "🏃" },
@@ -115,7 +120,11 @@ function RoleBadge({ role }: { role: string }) {
       {role}
     </Badge>
   );
-}
+});
+
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
 
 export default function AthleteHeader({
   athlete,
@@ -123,36 +132,27 @@ export default function AthleteHeader({
   onMessageUser,
   isFriendProfile,
 }: AthleteHeaderProps & { isFriendProfile?: boolean }) {
+  // ============================================================================
+  // STATE
+  // ============================================================================
+
+  const [showFollowersModal, setShowFollowersModal] = useState(false);
+  const [showFollowingModal, setShowFollowingModal] = useState(false);
+
+  // ============================================================================
+  // MEMOIZED VALUES
+  // ============================================================================
+
   const fullName = useMemo(
     () => `${athlete.firstName} ${athlete.lastName}`,
     [athlete.firstName, athlete.lastName]
   );
 
-  // Get sport-specific banner
   const bannerUrl = useMemo(
     () => getSportBanner(athlete.primarySport || "DEFAULT"),
     [athlete.primarySport]
   );
-  const [showFollowersModal, setShowFollowersModal] = useState(false);
-  const [showFollowingModal, setShowFollowingModal] = useState(false);
 
-  const { data: liveCounters } = useAthleteCounters(
-    athlete.username,
-    10000, // Poll every 10 seconds
-    true // Enable polling
-  );
-  const displayFollowersCount =
-    liveCounters?.followersCount ?? athlete.followersCount ?? 0;
-  const displayFollowingCount =
-    liveCounters?.followingCount ?? athlete.followingCount ?? 0;
-
-  const { data: followStatus, isLoading: isLoadingFollowStatus } =
-    useFollowStatus(
-      athlete.username,
-      !isOwnProfile // Only fetch if not own profile
-    );
-
-  // Location string
   const location = useMemo(() => {
     const parts = [athlete.city, athlete.state, athlete.country].filter(
       Boolean
@@ -160,12 +160,56 @@ export default function AthleteHeader({
     return parts.length > 0 ? parts.join(", ") : "Location not set";
   }, [athlete.city, athlete.state, athlete.country]);
 
-  // Member since
   const memberSince = useMemo(() => {
     return athlete.createdAt
       ? formatDate(athlete.createdAt, "medium")
       : "Recently";
   }, [athlete.createdAt]);
+
+  // ✅ REMOVED POLLING - Use cached follower counts from profile data
+  const displayFollowersCount = useMemo(
+    () => athlete.followersCount ?? 0,
+    [athlete.followersCount]
+  );
+
+  const displayFollowingCount = useMemo(
+    () => athlete.followingCount ?? 0,
+    [athlete.followingCount]
+  );
+
+  // ============================================================================
+  // FETCH FOLLOW STATUS (No polling)
+  // ============================================================================
+
+  const { data: followStatus, isLoading: isLoadingFollowStatus } =
+    useFollowStatus(
+      athlete.username,
+      !isOwnProfile // Only fetch if not own profile
+    );
+
+  // ============================================================================
+  // CALLBACKS
+  // ============================================================================
+
+  const handleOpenFollowersModal = useCallback(() => {
+    setShowFollowersModal(true);
+  }, []);
+
+  const handleCloseFollowersModal = useCallback(() => {
+    setShowFollowersModal(false);
+  }, []);
+
+  const handleOpenFollowingModal = useCallback(() => {
+    setShowFollowingModal(true);
+  }, []);
+
+  const handleCloseFollowingModal = useCallback(() => {
+    setShowFollowingModal(false);
+  }, []);
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
 
   return (
     <section className="relative w-full max-w-6xl mx-auto mb-6">
@@ -180,16 +224,18 @@ export default function AthleteHeader({
         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
 
         {/* Edit Button (Own Profile) */}
-        <EditProfileDialog>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="absolute top-4 right-4 bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg"
-          >
-            <Edit size={16} className="mr-2" />
-            Edit Profile
-          </Button>
-        </EditProfileDialog>
+        {isOwnProfile && (
+          <EditProfileDialog athlete={athlete}>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="absolute top-4 right-4 bg-white/90 hover:bg-white backdrop-blur-sm shadow-lg"
+            >
+              <Edit size={16} className="mr-2" />
+              Edit Profile
+            </Button>
+          </EditProfileDialog>
+        )}
       </div>
 
       {/* Profile Card */}
@@ -249,7 +295,7 @@ export default function AthleteHeader({
               {/* Follower Stats */}
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
                 <button
-                  onClick={() => setShowFollowersModal(true)}
+                  onClick={handleOpenFollowersModal}
                   className="group flex items-center gap-1.5 hover:text-blue-600 transition-colors"
                 >
                   <span className="text-2xl font-bold text-slate-900 group-hover:text-blue-600">
@@ -260,13 +306,12 @@ export default function AthleteHeader({
                   </span>
                 </button>
                 <button
-                  onClick={() => setShowFollowingModal(true)}
+                  onClick={handleOpenFollowingModal}
                   className="group flex items-center gap-1.5 hover:text-blue-600 transition-colors"
                 >
                   <span className="text-2xl font-bold text-slate-900 group-hover:text-blue-600">
                     {formatCount(displayFollowingCount)}
                   </span>
-
                   <span className="text-slate-600 group-hover:text-blue-600">
                     Following
                   </span>
@@ -293,7 +338,7 @@ export default function AthleteHeader({
               </div>
               {athlete.gender && (
                 <div className="flex items-center gap-1.5">
-                  <Shield size={16} className="text-slate-400" />
+                  <span className="text-slate-400">•</span>
                   <span>{athlete.gender}</span>
                 </div>
               )}
@@ -319,10 +364,9 @@ export default function AthleteHeader({
             </div>
 
             {/* Action Buttons */}
-            {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 pt-2">
               {isOwnProfile ? (
-                <EditProfileDialog>
+                <EditProfileDialog athlete={athlete}>
                   <Button
                     variant="default"
                     size="lg"
@@ -349,26 +393,27 @@ export default function AthleteHeader({
                       targetId={athlete.username}
                       type="athlete"
                       initialFollowing={followStatus?.isFollowing || false}
-                      displayName={`${athlete.firstName} ${athlete.lastName}`}
+                      displayName={fullName}
                       size="lg"
                     />
                   )}
 
                   {!followStatus?.isMutual ? (
                     <Tooltip>
-                      <TooltipTrigger>
-                        <TooltipContent>
-                          <Button
-                            variant="outline"
-                            size="lg"
-                            disabled
-                            className="font-semibold border-2 opacity-50 cursor-not-allowed"
-                          >
-                            <Lock size={18} className="mr-2" />
-                            Message (Follow each other first)
-                          </Button>
-                        </TooltipContent>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          disabled
+                          className="font-semibold border-2 opacity-50 cursor-not-allowed"
+                        >
+                          <Lock size={18} className="mr-2" />
+                          Message
+                        </Button>
                       </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Follow each other to message</p>
+                      </TooltipContent>
                     </Tooltip>
                   ) : (
                     <Button
@@ -400,18 +445,19 @@ export default function AthleteHeader({
           <StatsPreview wins={0} losses={0} totalMatches={0} />
         </div>
       </div>
+
       {/* Modals */}
       <FollowerListModal
         username={athlete.username}
         isOpen={showFollowersModal}
-        onClose={() => setShowFollowersModal(false)}
+        onClose={handleCloseFollowersModal}
         currentUserId={athlete.id}
       />
 
       <FollowingListModal
         username={athlete.username}
         isOpen={showFollowingModal}
-        onClose={() => setShowFollowingModal(false)}
+        onClose={handleCloseFollowingModal}
         currentUserId={athlete.id}
       />
     </section>

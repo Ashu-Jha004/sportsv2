@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Upload, X, User, Loader2, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 
 type ProfileFormValues = OnboardingProfileDTO;
 
@@ -212,7 +213,61 @@ export default function StepProfile() {
       <form className="space-y-6">
         {/* Profile Image Section - same as before */}
         <div className="rounded-lg border border-slate-200 bg-linear-to-br from-emerald-50 to-teal-50 p-6">
-          {/* ... image upload UI ... */}
+          <div className="rounded-lg border border-slate-200 p-6">
+            <FormLabel className="mb-2 block">Profile Image</FormLabel>
+
+            {previewUrl ? (
+              <div className="relative w-32 h-32">
+                <Image
+                  alt="user profile"
+                  src={previewUrl}
+                  width={300}
+                  height={300}
+                  className="w-full h-full rounded-full object-cover"
+                />
+                <Button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                >
+                  <X size={14} />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Upload size={18} />
+                <span>Upload image</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleFileSelect}
+                />
+              </label>
+            )}
+
+            {selectedFile && (
+              <Button
+                type="button"
+                onClick={handleImageUpload}
+                disabled={uploading}
+                className="mt-3"
+              >
+                {uploading ? <Loader2 className="animate-spin" /> : "Upload"}
+              </Button>
+            )}
+
+            {uploadError && (
+              <p className="text-sm text-red-600 mt-2">{uploadError}</p>
+            )}
+
+            {uploadSuccess && (
+              <p className="text-sm text-green-600 mt-2">
+                <CheckCircle2 className="inline mr-1" size={14} />
+                Uploaded
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Personal Info - UPDATE with onBlur */}

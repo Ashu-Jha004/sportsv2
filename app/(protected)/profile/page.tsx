@@ -1,39 +1,31 @@
 "use client";
-import React from "react";
-import { redirect } from "next/navigation";
-import { useEffect } from "react";
+
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-const page = () => {
-  const { isSignedIn, user, isLoaded } = useUser();
-  console.log(user);
+export default function ProfileRedirect() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+
   useEffect(() => {
-    if (!isLoaded) return; // Wait for auth state load
-
-    if (!isSignedIn) {
-      redirect("/auth/sign-in");
-      return;
+    if (isLoaded) {
+      if (user?.username) {
+        router.replace(`/profile/${user.username}`);
+      } else {
+        router.replace("/onboarding"); // Or wherever you want
+      }
     }
+  }, [isLoaded, user, router]);
 
-    if (user?.publicMetadata?.username) {
-      redirect(`/profile/${user?.publicMetadata?.username}`);
-      return;
-    }
-
-    // Optional fallback warning for signed-in users without username
-    console.warn("User signed in but username missing");
-  }, [isLoaded, isSignedIn, user]);
-
-  if (!isLoaded) {
-    // Optionally show a loading spinner or placeholder while auth is loading
-    return <div>Loading...</div>;
-  }
-
-  if (!isSignedIn || !user?.publicMetadata?.username) {
-    // Prevent flicker by not rendering content until redirects handled
-    return null;
-  }
-  return <div>page</div>;
-};
-
-export default page;
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-12 w-12 rounded-full border-4 border-blue-600/70 border-t-transparent animate-spin" />
+        <p className="text-sm font-medium text-slate-600">
+          Redirecting to your profile...
+        </p>
+      </div>
+    </div>
+  );
+}

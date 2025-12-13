@@ -27,37 +27,71 @@ import {
   Globe,
   CheckCircle2,
   AlertCircle,
+  ArrowRight, // Added for Next button
 } from "lucide-react";
 
 type LocationFormValues = OnboardingLocationDTO;
 
 export default function StepLocation() {
-  const { location, updateLocation } = useOnboardingStore();
+  const { location, updateLocation, nextStep } = useOnboardingStore(); // Assuming nextStep exists
   const [geoLoading, setGeoLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Added for form submission
   const [geoError, setGeoError] = useState<string | null>(null);
   const [geoSuccess, setGeoSuccess] = useState(false);
 
   const form = useForm<LocationFormValues>({
     resolver: zodResolver(OnboardingLocationSchema),
     defaultValues: {
+      // Use empty string for text fields, and 0 for number fields (or null if the schema allows)
       country: location.country ?? "",
       state: location.state ?? "",
       city: location.city ?? "",
       latitude: location.latitude ?? 0,
       longitude: location.longitude ?? 0,
     },
-    mode: "onChange",
+    mode: "onBlur", // Changed to onBlur for better performance/less re-render, or keep onChange if preferred
   });
 
-  // ADDED: Handle field updates to store
+  // Type-safe handling of field updates to the Zustand store
   const handleFieldUpdate = useCallback(
-    (field: keyof LocationFormValues, value: any) => {
-      updateLocation({ [field]: value });
+    (
+      field: keyof LocationFormValues,
+      value: LocationFormValues[typeof field]
+    ) => {
+      // Coerce value types if necessary before updating the store
+      const updatedValue =
+        field === "latitude" || field === "longitude"
+          ? value === ""
+            ? 0
+            : Number(value) // Ensure 0 is saved for empty coordinate
+          : value;
+
+      updateLocation({ [field]: updatedValue });
     },
     [updateLocation]
   );
 
-  // REMOVED: The problematic useEffect with form.watch()
+  const onSubmit = useCallback(
+    async (data: LocationFormValues) => {
+      setIsSubmitting(true);
+      try {
+        // Optional: Perform any final validation or API call here
+        console.log("Form submitted, saving final location data:", data);
+
+        // Ensure the latest form data is in the store, though it should be
+        updateLocation(data);
+
+        // Move to the next step
+        // await nextStep(); // Uncomment if nextStep is an async action
+        nextStep();
+      } catch (error) {
+        console.error("Submission error:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [updateLocation, nextStep] // Added nextStep to dependency array
+  );
 
   const handleUseCurrentLocation = useCallback(() => {
     if (geoLoading) return;
@@ -83,13 +117,13 @@ export default function StepLocation() {
           );
 
           if (!response.ok) {
-            throw new Error("Failed to get location details");
+            throw new Error("Failed to get location details (Status not OK)");
           }
 
           const data = await response.json();
 
           if (data.success && data.location) {
-            // Update all fields
+            // Update react-hook-form state
             form.setValue("latitude", data.location.latitude, {
               shouldDirty: true,
               shouldValidate: true,
@@ -111,7 +145,7 @@ export default function StepLocation() {
               shouldValidate: true,
             });
 
-            // ADDED: Update store immediately
+            // Update store immediately with all received data
             updateLocation({
               latitude: data.location.latitude,
               longitude: data.location.longitude,
@@ -123,16 +157,19 @@ export default function StepLocation() {
             setGeoSuccess(true);
             setGeoError(null);
           } else {
-            throw new Error(data.error || "Failed to get location details");
+            // Handle case where API succeeds but returns an error/no location
+            throw new Error(
+              data.error || "Failed to get location details from server."
+            );
           }
         } catch (error) {
           const message =
             error instanceof Error
               ? error.message
-              : "Failed to get location details. Please enter manually.";
+              : "An unexpected error occurred during reverse geocoding. Please enter manually.";
           setGeoError(message);
 
-          // Still set coordinates even if reverse geocoding fails
+          // Still set coordinates in form and store even if reverse geocoding fails
           form.setValue("latitude", latitude, {
             shouldDirty: true,
             shouldValidate: true,
@@ -143,8 +180,7 @@ export default function StepLocation() {
           });
 
           // Update store with coordinates only
-          handleFieldUpdate("latitude", latitude);
-          handleFieldUpdate("longitude", longitude);
+          updateLocation({ latitude, longitude });
         } finally {
           setGeoLoading(false);
         }
@@ -174,11 +210,11 @@ export default function StepLocation() {
         maximumAge: 0,
       }
     );
-  }, [form, geoLoading, updateLocation, handleFieldUpdate]);
+  }, [form, geoLoading, updateLocation]); // Removed handleFieldUpdate as it is replaced by direct updateLocation
 
   return (
     <Form {...form}>
-      <form className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-linear-to-br from-emerald-400 to-teal-500 shadow-lg">
@@ -208,7 +244,7 @@ export default function StepLocation() {
             <Button
               type="button"
               onClick={handleUseCurrentLocation}
-              disabled={geoLoading}
+              disabled={geoLoading || isSubmitting}
               className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {geoLoading ? (
@@ -354,7 +390,7 @@ export default function StepLocation() {
                           step="any"
                           className="rounded-lg border-slate-300 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
                           {...field}
-                          value={field.value ?? ""}
+                          value={field.value === 0 ? "" : field.value} // Display empty string for 0
                           onChange={(e) =>
                             field.onChange(
                               e.target.value === "" ? 0 : Number(e.target.value)
@@ -388,7 +424,7 @@ export default function StepLocation() {
                           step="any"
                           className="rounded-lg border-slate-300 bg-white text-sm focus:border-emerald-500 focus:ring-emerald-500"
                           {...field}
-                          value={field.value ?? ""}
+                          value={field.value === 0 ? "" : field.value} // Display empty string for 0
                           onChange={(e) =>
                             field.onChange(
                               e.target.value === "" ? 0 : Number(e.target.value)

@@ -45,11 +45,8 @@ export async function GET(
   { params }: { params: Promise<{ username: string }> }
 ) {
   try {
-    console.log("--- 📋 GET ATHLETE BY USERNAME REQUEST ---");
-
     // 1. Get username from params
     const { username } = await params;
-    console.log(`📍 Looking up username: ${username}`);
 
     if (!username) {
       return createApiResponse({ error: "Username is required" }, 400);
@@ -59,15 +56,9 @@ export async function GET(
     const auth = await optionalAuth();
     const viewerAthleteId = auth?.athleteId;
 
-    console.log(
-      auth
-        ? `✅ Authenticated viewer: ${viewerAthleteId}`
-        : "ℹ️ Anonymous viewer"
-    );
-
     // 3. Get athlete profile
     const profile = await getAthleteByUsernameService(username);
-    console.log(`✅ Profile fetched: ${profile.clerkUserId}`, profile);
+
     // 4. Return public profile data
     return createApiResponse(profile);
   } catch (error) {
